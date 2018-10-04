@@ -1,0 +1,175 @@
+<deployment-project plugin="plugin.ezdeploy" plugin-version="1.0">
+  <configuration build-checksum="2007496260" file="/home/matuser2/GitHub/FLLIT/src/FLLIT_compile.prj" location="/home/matuser2/GitHub/FLLIT/src" name="FLLIT_compile" preferred-package-location="/home/matuser2/GitHub/FLLIT/src/FLLIT_compile/for_redistribution" preferred-package-type="package.type.install" target="target.ezdeploy.standalone" target-name="Application Compiler">
+    <param.appname>FLLIT</param.appname>
+    <param.icon />
+    <param.icons />
+    <param.version>1.0</param.version>
+    <param.authnamewatermark />
+    <param.email />
+    <param.company />
+    <param.summary />
+    <param.description />
+    <param.screenshot />
+    <param.guid />
+    <param.installpath.string>/FLLIT/</param.installpath.string>
+    <param.installpath.combo>option.installpath.user</param.installpath.combo>
+    <param.logo />
+    <param.install.notes>In the following directions, replace MCR_ROOT by the directory where the MATLAB Runtime is installed on the target machine.
+
+(1) Set the environment variable XAPPLRESDIR to this value:
+
+    MCR_ROOT/v901/X11/app-defaults
+
+
+(2) If the environment variable LD_LIBRARY_PATH is undefined, set it to the concatenation of the following strings:
+
+    MCR_ROOT/v901/runtime/glnxa64:
+    MCR_ROOT/v901/bin/glnxa64:
+    MCR_ROOT/v901/sys/os/glnxa64:
+    MCR_ROOT/v901/sys/opengl/lib/glnxa64
+
+    If it is defined, set it to the concatenation of these strings:
+
+    ${LD_LIBRARY_PATH}: 
+    MCR_ROOT/v901/runtime/glnxa64:
+    MCR_ROOT/v901/bin/glnxa64:
+    MCR_ROOT/v901/sys/os/glnxa64:
+    MCR_ROOT/v901/sys/opengl/lib/glnxa64</param.install.notes>
+    <param.target.install.notes />
+    <param.intermediate>${PROJECT_ROOT}/FLLIT_compile/for_testing</param.intermediate>
+    <param.files.only>${PROJECT_ROOT}/FLLIT_compile/for_redistribution_files_only</param.files.only>
+    <param.output>${PROJECT_ROOT}/FLLIT_compile/for_redistribution</param.output>
+    <param.logdir>${PROJECT_ROOT}/FLLIT_compile</param.logdir>
+    <param.enable.clean.build>false</param.enable.clean.build>
+    <param.user.defined.mcr.options />
+    <param.embed.ctf>true</param.embed.ctf>
+    <param.target.type>subtarget.standalone</param.target.type>
+    <param.support.packages />
+    <param.web.mcr>true</param.web.mcr>
+    <param.package.mcr>false</param.package.mcr>
+    <param.no.mcr>false</param.no.mcr>
+    <param.web.mcr.name>MyAppInstaller_web</param.web.mcr.name>
+    <param.package.mcr.name>MyAppInstaller_mcr</param.package.mcr.name>
+    <param.no.mcr.name>MyAppInstaller_app</param.no.mcr.name>
+    <param.windows.command.prompt>false</param.windows.command.prompt>
+    <param.create.log>false</param.create.log>
+    <param.log.file />
+    <unset>
+      <param.icon />
+      <param.icons />
+      <param.version />
+      <param.authnamewatermark />
+      <param.email />
+      <param.company />
+      <param.summary />
+      <param.description />
+      <param.screenshot />
+      <param.guid />
+      <param.installpath.string />
+      <param.installpath.combo />
+      <param.logo />
+      <param.target.install.notes />
+      <param.intermediate />
+      <param.files.only />
+      <param.output />
+      <param.logdir />
+      <param.enable.clean.build />
+      <param.user.defined.mcr.options />
+      <param.embed.ctf />
+      <param.target.type />
+      <param.support.packages />
+      <param.web.mcr />
+      <param.package.mcr />
+      <param.no.mcr />
+      <param.web.mcr.name />
+      <param.package.mcr.name />
+      <param.no.mcr.name />
+      <param.windows.command.prompt />
+      <param.create.log />
+      <param.log.file />
+    </unset>
+    <fileset.main>
+      <file>${PROJECT_ROOT}/FLLIT.m</file>
+    </fileset.main>
+    <fileset.resources />
+    <fileset.package />
+    <fileset.depfun>
+      <file>${PROJECT_ROOT}/DataProcessing_New.m</file>
+      <file>${PROJECT_ROOT}/DouglasPeucker.m</file>
+      <file>${PROJECT_ROOT}/Export-Fig/copyfig.m</file>
+      <file>${PROJECT_ROOT}/Export-Fig/crop_borders.m</file>
+      <file>${PROJECT_ROOT}/Export-Fig/eps2pdf.m</file>
+      <file>${PROJECT_ROOT}/Export-Fig/export_fig.m</file>
+      <file>${PROJECT_ROOT}/Export-Fig/fix_lines.m</file>
+      <file>${PROJECT_ROOT}/Export-Fig/ghostscript.m</file>
+      <file>${PROJECT_ROOT}/Export-Fig/isolate_axes.m</file>
+      <file>${PROJECT_ROOT}/Export-Fig/pdf2eps.m</file>
+      <file>${PROJECT_ROOT}/Export-Fig/pdftops.m</file>
+      <file>${PROJECT_ROOT}/Export-Fig/print2array.m</file>
+      <file>${PROJECT_ROOT}/Export-Fig/print2eps.m</file>
+      <file>${PROJECT_ROOT}/Export-Fig/read_write_entire_textfile.m</file>
+      <file>${PROJECT_ROOT}/Export-Fig/user_string.m</file>
+      <file>${PROJECT_ROOT}/Export-Fig/using_hg2.m</file>
+      <file>${PROJECT_ROOT}/FLLIT.fig</file>
+      <file>${PROJECT_ROOT}/KernelBoost-v0.1/compute_wr.m</file>
+      <file>${PROJECT_ROOT}/KernelBoost-v0.1/merge_features_kernels.m</file>
+      <file>${PROJECT_ROOT}/KernelBoost-v0.1/mex/LDARegStumpPredict.mexa64</file>
+      <file>${PROJECT_ROOT}/KernelBoost-v0.1/mex/LDARegStumpTrain.mexa64</file>
+      <file>${PROJECT_ROOT}/KernelBoost-v0.1/mex/mexEvaluateKernels.mexa64</file>
+      <file>${PROJECT_ROOT}/KernelBoost-v0.1/mex/mexLineSearch.mexa64</file>
+      <file>${PROJECT_ROOT}/KernelBoost-v0.1/mex/mexMultipleSmoothRegression.mexa64</file>
+      <file>${PROJECT_ROOT}/KernelBoost-v0.1/mex/mexQws.mexa64</file>
+      <file>${PROJECT_ROOT}/KernelBoost-v0.1/remove_useless_filters.m</file>
+      <file>${PROJECT_ROOT}/KernelBoost-v0.1/select_fncts.m</file>
+      <file>${PROJECT_ROOT}/KernelBoost-v0.1/setup_config_DRIVE_L.m</file>
+      <file>${PROJECT_ROOT}/KernelBoost-v0.1/setup_config_L.m</file>
+      <file>${PROJECT_ROOT}/KernelBoost-v0.1/setup_config_STARE.m</file>
+      <file>${PROJECT_ROOT}/KernelBoost-v0.1/train_boost_general.m</file>
+      <file>${PROJECT_ROOT}/PolygonClip.mexa64</file>
+      <file>${PROJECT_ROOT}/Segmentation.m</file>
+      <file>${PROJECT_ROOT}/Tracking_Base.m</file>
+      <file>${PROJECT_ROOT}/Video_base.m</file>
+      <file>${PROJECT_ROOT}/anaskel.m</file>
+      <file>${PROJECT_ROOT}/anaskel.mexa64</file>
+      <file>${PROJECT_ROOT}/batch_evaluate_boost_images.m</file>
+      <file>${PROJECT_ROOT}/filter_small_comp.m</file>
+      <file>${PROJECT_ROOT}/findCoM.m</file>
+      <file>${PROJECT_ROOT}/findtips.m</file>
+      <file>${PROJECT_ROOT}/hungarianlinker.m</file>
+      <file>${PROJECT_ROOT}/intersections.m</file>
+      <file>${PROJECT_ROOT}/leg_segment.m</file>
+      <file>${PROJECT_ROOT}/mtit.m</file>
+      <file>${PROJECT_ROOT}/munkres.m</file>
+      <file>${PROJECT_ROOT}/skeleton.m</file>
+      <file>${PROJECT_ROOT}/skeleton.mexa64</file>
+      <file>${PROJECT_ROOT}/uipickfiles.m</file>
+      <file>${PROJECT_ROOT}/video2background.m</file>
+    </fileset.depfun>
+    <build-deliverables>
+      <file location="${PROJECT_ROOT}/FLLIT_compile/for_testing" name="splash.png" optional="false">/home/matuser2/GitHub/FLLIT/src/FLLIT_compile/for_testing/splash.png</file>
+      <file location="${PROJECT_ROOT}/FLLIT_compile/for_testing" name="readme.txt" optional="true">/home/matuser2/GitHub/FLLIT/src/FLLIT_compile/for_testing/readme.txt</file>
+      <file location="${PROJECT_ROOT}/FLLIT_compile/for_testing" name="FLLIT" optional="false">/home/matuser2/GitHub/FLLIT/src/FLLIT_compile/for_testing/FLLIT</file>
+      <file location="${PROJECT_ROOT}/FLLIT_compile/for_testing" name="run_FLLIT.sh" optional="false">/home/matuser2/GitHub/FLLIT/src/FLLIT_compile/for_testing/run_FLLIT.sh</file>
+    </build-deliverables>
+    <workflow />
+    <matlab>
+      <root>/home/matuser2/wushuang/MATLAB/R2016a</root>
+      <toolboxes />
+    </matlab>
+    <platform>
+      <unix>true</unix>
+      <mac>false</mac>
+      <windows>false</windows>
+      <win2k>false</win2k>
+      <winxp>false</winxp>
+      <vista>false</vista>
+      <linux>true</linux>
+      <solaris>false</solaris>
+      <osver>4.4.0-135-generic</osver>
+      <os32>false</os32>
+      <os64>true</os64>
+      <arch>glnxa64</arch>
+      <matlab>true</matlab>
+    </platform>
+  </configuration>
+</deployment-project>
