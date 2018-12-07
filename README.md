@@ -16,40 +16,28 @@ The program processes input data consisting of 512 pixels x 512 pixels video ima
 - Further processing of the above raw tracking data with the `Data Process' module
 - Visualisation of the tracked results via the `Make Video' module.
 
-## Getting started with FLLIT
+## Getting started with FLLIT on Ubuntu
 The precompiled version of **FLLIT** can be found [here](./Compiled). Sample data is provided under the [Data](./Compiled/Data) folder. This version is compiled on MATLAB R2016a in Ubuntu 16.04 and requires the corresponding [MATLAB Runtime libraries](http://ssd.mathworks.com/supportfiles/downloads/R2016a/deployment_files/R2016a/installers/glnxa64/MCR_R2016a_glnxa64_installer.zip).
 
-Extract the MATLAB runtime libraries and open a terminal in the extracted folder. Initiate installation of the MATLAB runtime libraries by issuing the following command
+To install the MATLAB runtime libraries, open a terminal in the FLLIT directory and issue the following command
 
-```sudo bash install```.
+```bash install MCR_R2016a.sh```.
 
-By default, the library is installed to the following location:
+This will take a while to download and install the MATLAB runtime libraries to the following location:
 
-```/usr/local/MATLAB/MATLAB Runtime/v901```.
-
-Please take note of the **MATLAB Runtime directory** as this will be needed to execute FLLIT.
+```$HOME/MCR```.
 
 The **FLLIT** executables consist of FLLIT and run FLLIT.sh. Open a terminal in the FLLIT directory and execute FLLIT with the following command
 
-```bash run FLLIT.sh <MATLAB Runtime directory>```.
+```bash run FLLIT.sh $HOME/MCR/v901```.
 
-Here the **MATLAB Runtime directory** is the installation directory of the MATLAB Runtime libraries. For example if the default installation directory is chosen, the FLLIT execution command will be
-
-```bash run FLLIT.sh /usr/local/MATLAB/MATLAB Runtime/v901```.
+## Running FLLIT on other Operating Systems
+On Windows or MacOS, it will be necessary to deploy **FLLIT** in a [Docker](https://www.docker.com/) environment. Please refer to section 1.3 and 1.4 of the [readme](./Compiled/Readme.pdf) for more details.
 
 ## Potential Issues and Troubleshooting
 - It might be necessary, for first time usage, to accord executable rights to FLLIT and run FLLIT.sh, which can be done with the following command
 
 ```chmod +x run FLLIT.sh FLLIT```.
-- Be sure to have the correct location of the **MATLAB Runtime directory** when executing FLLIT.
-- ```sudo``` requires administrator access. If there is no administrator access, please install the MATLAB runtime libraries without ```sudo```.
-
-```bash ./MCR R2016a glnxa64 installer/install```.
-
-Note that the default installation directory cannot be chosen in this case.
-- In some cases, it might be required to execute FLLIT with ```sudo```
-
-```sudo bash run FLLIT.sh <MATLAB Runtime directory>```.
 
 Further details about **FLLIT** can be found in the [readme](./Compiled/Readme.pdf).
 
