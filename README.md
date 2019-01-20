@@ -1,4 +1,4 @@
-# FLLIT
+# FLLIT (Published in [PLOS Biology](https://journals.plos.org/plosbiology/article?id=10.1371/journal.pbio.3000346))
 ## Overview of Feature Learning-based LImb segmentation and Tracking (**FLLIT**)
 
 The **FLLIT** program is compiled on MATLAB R2016a and runs on a Linux OS (eg. Ubuntu 16.04).
@@ -21,7 +21,7 @@ The precompiled version of **FLLIT** can be found [here](./Compiled). Sample dat
 
 To install the MATLAB runtime libraries, open a terminal in the FLLIT directory and issue the following command
 
-```bash install MCR_R2016a.sh```.
+```bash MCR_R2016a.sh```.
 
 This will take a while to download and install the MATLAB runtime libraries to the following location:
 
@@ -29,7 +29,7 @@ This will take a while to download and install the MATLAB runtime libraries to t
 
 The **FLLIT** executables consist of FLLIT and run FLLIT.sh. Open a terminal in the FLLIT directory and execute FLLIT with the following command
 
-```bash run FLLIT.sh $HOME/MCR/v901```.
+```bash run_FLLIT.sh $HOME/MCR/v901```.
 
 ## Running FLLIT on other Operating Systems
 On Windows or MacOS, it will be necessary to deploy **FLLIT** in a [Docker](https://www.docker.com/) environment. Please refer to section 1.3 and 1.4 of the [readme](./Compiled/Readme.pdf) for more details.
@@ -37,7 +37,7 @@ On Windows or MacOS, it will be necessary to deploy **FLLIT** in a [Docker](http
 ## Potential Issues and Troubleshooting
 - It might be necessary, for first time usage, to accord executable rights to FLLIT and run FLLIT.sh, which can be done with the following command
 
-```chmod +x run FLLIT.sh FLLIT```.
+```chmod +x run_FLLIT.sh FLLIT```.
 
 Further details about **FLLIT** can be found in the [readme](./Compiled/Readme.pdf).
 

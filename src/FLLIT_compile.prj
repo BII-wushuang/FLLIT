@@ -1,5 +1,5 @@
 <deployment-project plugin="plugin.ezdeploy" plugin-version="1.0">
-  <configuration build-checksum="2007496260" file="/home/matuser2/GitHub/FLLIT/src/FLLIT_compile.prj" location="/home/matuser2/GitHub/FLLIT/src" name="FLLIT_compile" preferred-package-location="/home/matuser2/GitHub/FLLIT/src/FLLIT_compile/for_redistribution" preferred-package-type="package.type.install" target="target.ezdeploy.standalone" target-name="Application Compiler">
+  <configuration build-checksum="1753882933" file="/home/wushuang/GitHub/FLLIT/src/FLLIT_compile.prj" location="/home/wushuang/GitHub/FLLIT/src" name="FLLIT_compile" preferred-package-location="/home/wushuang/GitHub/FLLIT/src/FLLIT_compile/for_redistribution" preferred-package-type="package.type.install" target="target.ezdeploy.standalone" target-name="Application Compiler">
     <param.appname>FLLIT</param.appname>
     <param.icon />
     <param.icons />
@@ -146,14 +146,14 @@
       <file>${PROJECT_ROOT}/video2background.m</file>
     </fileset.depfun>
     <build-deliverables>
-      <file location="${PROJECT_ROOT}/FLLIT_compile/for_testing" name="splash.png" optional="false">/home/matuser2/GitHub/FLLIT/src/FLLIT_compile/for_testing/splash.png</file>
-      <file location="${PROJECT_ROOT}/FLLIT_compile/for_testing" name="readme.txt" optional="true">/home/matuser2/GitHub/FLLIT/src/FLLIT_compile/for_testing/readme.txt</file>
-      <file location="${PROJECT_ROOT}/FLLIT_compile/for_testing" name="FLLIT" optional="false">/home/matuser2/GitHub/FLLIT/src/FLLIT_compile/for_testing/FLLIT</file>
-      <file location="${PROJECT_ROOT}/FLLIT_compile/for_testing" name="run_FLLIT.sh" optional="false">/home/matuser2/GitHub/FLLIT/src/FLLIT_compile/for_testing/run_FLLIT.sh</file>
+      <file location="${PROJECT_ROOT}/FLLIT_compile/for_testing" name="FLLIT" optional="false">/home/wushuang/GitHub/FLLIT/src/FLLIT_compile/for_testing/FLLIT</file>
+      <file location="${PROJECT_ROOT}/FLLIT_compile/for_testing" name="readme.txt" optional="true">/home/wushuang/GitHub/FLLIT/src/FLLIT_compile/for_testing/readme.txt</file>
+      <file location="${PROJECT_ROOT}/FLLIT_compile/for_testing" name="run_FLLIT.sh" optional="false">/home/wushuang/GitHub/FLLIT/src/FLLIT_compile/for_testing/run_FLLIT.sh</file>
+      <file location="${PROJECT_ROOT}/FLLIT_compile/for_testing" name="splash.png" optional="false">/home/wushuang/GitHub/FLLIT/src/FLLIT_compile/for_testing/splash.png</file>
     </build-deliverables>
     <workflow />
     <matlab>
-      <root>/home/matuser2/wushuang/MATLAB/R2016a</root>
+      <root>/home/wushuang/wushuang/MATLAB/R2016a</root>
       <toolboxes />
     </matlab>
     <platform>
@@ -165,7 +165,7 @@
       <vista>false</vista>
       <linux>true</linux>
       <solaris>false</solaris>
-      <osver>4.4.0-135-generic</osver>
+      <osver>4.18.0-20-generic</osver>
       <os32>false</os32>
       <os64>true</os64>
       <arch>glnxa64</arch>
