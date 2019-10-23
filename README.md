@@ -17,27 +17,41 @@ The program processes input data consisting of 512 pixels x 512 pixels video ima
 - Visualisation of the tracked results via the `Make Video' module.
 
 ## Getting started with FLLIT on Ubuntu
-The precompiled version of **FLLIT** can be found [here](./Compiled). Sample data is provided under the [Data](./Compiled/Data) folder. This version is compiled on MATLAB R2016a in Ubuntu 16.04 and requires the corresponding [MATLAB Runtime libraries](http://ssd.mathworks.com/supportfiles/downloads/R2016a/deployment_files/R2016a/installers/glnxa64/MCR_R2016a_glnxa64_installer.zip).
+Clone this repository with 
 
-To install the MATLAB runtime libraries, open a terminal in the FLLIT directory and issue the following command
+```git clone https://github.com/BII-wushuang/FLLIT.git```
 
-```bash MCR_R2016a.sh```.
+Please note that due to the large file size of the sample datasets, a direct download may incur disconnection issues. Another option would be cloning via [GitHub Desktop]( https://desktop.github.com/ ) (available on Windows and MacOS).
+
+
+
+The precompiled version of **FLLIT** can be found in FLLIT/Compiled. Sample data is provided under the [Data](./Compiled/Data) folder. This version is compiled on MATLAB R2016a in Ubuntu 16.04 and requires the corresponding [MATLAB Runtime libraries](http://ssd.mathworks.com/supportfiles/downloads/R2016a/deployment_files/R2016a/installers/glnxa64/MCR_R2016a_glnxa64_installer.zip).
+
+To install the MATLAB runtime libraries, open a terminal in the FLLIT/Compiled directory and issue the following command
+
+```bash MCR_R2016a.sh```
 
 This will take a while to download and install the MATLAB runtime libraries to the following location:
 
-```$HOME/MCR```.
+```$HOME/MCR```
 
 The **FLLIT** executables consist of FLLIT and run FLLIT.sh. Open a terminal in the FLLIT directory and execute FLLIT with the following command
 
-```bash run_FLLIT.sh $HOME/MCR/v901```.
+```bash run_FLLIT.sh $HOME/MCR/v901```
 
 ## Running FLLIT on other Operating Systems
-On Windows or MacOS, it will be necessary to deploy **FLLIT** in a [Docker](https://www.docker.com/) environment. Please refer to section 1.3 and 1.4 of the [readme](./Compiled/Readme.pdf) for more details.
+On Windows or MacOS, it will be necessary to deploy **FLLIT** in a [Docker](https://www.docker.com/) environment. Please refer to section 1.4 and 1.5 of the [readme](./Compiled/Readme.pdf) for more details.
 
 ## Potential Issues and Troubleshooting
-- It might be necessary, for first time usage, to accord executable rights to FLLIT and run FLLIT.sh, which can be done with the following command
+1) If you face disconnection issues when downloading directly as a zip, try either of the following:
 
-```chmod +x run_FLLIT.sh FLLIT```.
+Use the git command in terminal ```git clone https://github.com/BII-wushuang/FLLIT.git```
+
+or download with [GitHub Desktop]( https://desktop.github.com/ ) (available on Windows and MacOS).
+
+2) It might be necessary, for first time usage, to accord executable rights to **FLLIT**, which can be done with the following command
+
+```chmod +x FLLIT```
 
 Further details about **FLLIT** can be found in the [readme](./Compiled/Readme.pdf).
 
