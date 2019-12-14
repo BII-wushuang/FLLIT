@@ -17,17 +17,9 @@ The program processes input data consisting of 512 pixels x 512 pixels video ima
 - Visualisation of the tracked results via the `Make Video' module.
 
 ## Getting started with FLLIT on Ubuntu
-Clone this repository with 
+Clone/download this repository. 
 
-```git clone https://github.com/BII-wushuang/FLLIT.git```
-
-Please note that due to the large file size of the sample datasets, a direct download may incur disconnection issues. Another option would be cloning via [GitHub Desktop]( https://desktop.github.com/ ) (available on Windows and MacOS).
-
-
-
-The precompiled version of **FLLIT** can be found in FLLIT/Compiled. Sample data is provided under the [Data](./Compiled/Data) folder. This version is compiled on MATLAB R2016a in Ubuntu 16.04 and requires the corresponding [MATLAB Runtime libraries](http://ssd.mathworks.com/supportfiles/downloads/R2016a/deployment_files/R2016a/installers/glnxa64/MCR_R2016a_glnxa64_installer.zip).
-
-To install the MATLAB runtime libraries, open a terminal in the FLLIT/Compiled directory and issue the following command
+The precompiled version of **FLLIT** is located in FLLIT/Compiled.  This version is compiled on MATLAB R2016a in Ubuntu 16.04 and requires the corresponding MATLAB Runtime libraries. To install the MATLAB runtime libraries, open a terminal in the FLLIT/Compiled directory and issue the following command
 
 ```bash MCR_R2016a.sh```
 
@@ -38,6 +30,9 @@ This will take a while to download and install the MATLAB runtime libraries to t
 The **FLLIT** executables consist of FLLIT and run FLLIT.sh. Open a terminal in the FLLIT directory and execute FLLIT with the following command
 
 ```bash run_FLLIT.sh $HOME/MCR/v901```
+
+#### Sample Datasets
+Sample datasets may be downloaded from [GoogleDrive](https://drive.google.com/open?id=1sHYEV85wkquBi2xYVOjj7k9g8yI5CeLE). These sample data are to be placed under the FLLIT/Compiled/Data directory.
 
 ## Running FLLIT on other Operating Systems
 On Windows or MacOS, it will be necessary to deploy **FLLIT** in a [Docker](https://www.docker.com/) environment. Please refer to section 1.4 and 1.5 of the [readme](./Compiled/Readme.pdf) for more details.
