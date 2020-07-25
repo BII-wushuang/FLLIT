@@ -1,5 +1,5 @@
 <deployment-project plugin="plugin.ezdeploy" plugin-version="1.0">
-  <configuration build-checksum="1753882933" file="/home/wushuang/GitHub/FLLIT/src/FLLIT_compile.prj" location="/home/wushuang/GitHub/FLLIT/src" name="FLLIT_compile" preferred-package-location="/home/wushuang/GitHub/FLLIT/src/FLLIT_compile/for_redistribution" preferred-package-type="package.type.install" target="target.ezdeploy.standalone" target-name="Application Compiler">
+  <configuration build-checksum="3201117534" file="/home/wushuang/GitHub/FLLIT/src/FLLIT_compile.prj" location="/home/wushuang/GitHub/FLLIT/src" name="FLLIT_compile" preferred-package-location="/home/wushuang/GitHub/FLLIT/src/FLLIT_compile/for_redistribution" preferred-package-type="package.type.install" target="target.ezdeploy.standalone" target-name="Application Compiler">
     <param.appname>FLLIT</param.appname>
     <param.icon />
     <param.icons />
@@ -153,7 +153,7 @@
     </build-deliverables>
     <workflow />
     <matlab>
-      <root>/home/wushuang/wushuang/MATLAB/R2016a</root>
+      <root>/home/wushuang/MATLAB/R2016a</root>
       <toolboxes />
     </matlab>
     <platform>
@@ -165,7 +165,7 @@
       <vista>false</vista>
       <linux>true</linux>
       <solaris>false</solaris>
-      <osver>4.18.0-20-generic</osver>
+      <osver>5.0.0-37-generic</osver>
       <os32>false</os32>
       <os64>true</os64>
       <arch>glnxa64</arch>

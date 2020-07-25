@@ -1,16 +1,19 @@
 % Processes the raw data to extract relevant parameters
-function DataProcessing_New(fps,data_dir,scale)
+function DataProcessing_New(fps,data_dir,scale, bodylength)
 
 if (nargin < 1)
     fps = 1000;
     scale=11;
     data_dir = uigetdir('./Results/Tracking/');
+    bodylength = 2.88;
 end
 
-try 
+bodylength = bodylength * 512 / scale;
+
+try
     addpath('./Export-Fig');
 catch
-end    
+end
 
 fps_factor = floor(1000/fps);
 
@@ -54,26 +57,26 @@ nx = zeros(endframe, nlegs);
 ny = zeros(endframe, nlegs);
 
 % body length
-bodylength = zeros(nframes,1);
-for i = startframe : endframe
-    try
+try
+    img = imread([seg_dir 'roi_' num2str(1) '.png']);
+    
+    body_length = zeros(nframes,1);
+    for i = startframe : endframe
         img = imread([seg_dir 'roi_' num2str(i) '.png']);
-    catch
-        break
+        img_norm = imtranslate(img, [255 - CoM(i,1), 255 - CoM(i,2)]);
+        img_norm = imrotate(img_norm, CoM(i,3));
+        img_norm = imcrop(img_norm, [size(img_norm,1)/2-150 size(img_norm,2)/2-150 300 300]);
+        [Y,X] = find(img_norm);
+        body_length(i-startframe+1) = max(Y(find(X==150)))-min(Y(find(X==150)));
     end
-    img_norm = imtranslate(img, [255 - CoM(i,1), 255 - CoM(i,2)]);
-    img_norm = imrotate(img_norm, CoM(i,3));
-    img_norm = imcrop(img_norm, [size(img_norm,1)/2-150 size(img_norm,2)/2-150 300 300]);
-    [Y,X] = find(img_norm);
-    bodylength(i-startframe+1) = max(Y(find(X==150)))-min(Y(find(X==150)));
+    fileID = fopen([output_dir 'bodylength.xlsx'],'w');
+    fprintf(fileID, '%s\t\n', 'Mean body length (mm)');
+    fprintf(fileID, '%d\n\n', mean(body_length)*scale/512);
+    fprintf(fileID, '%s\t%s\t\n', 'Frame #', 'Length (mm)');
+    fclose(fileID);
+    dlmwrite([output_dir 'bodylength.xlsx'],[(startframe:endframe)', body_length*scale/512],'delimiter','\t','-append');
+catch
 end
-hist_bl = hist(bodylength);
-fileID = fopen([output_dir 'bodylength.csv'],'w');
-fprintf(fileID, '%s\t\n', 'Mean body length (mm)');
-fprintf(fileID, '%d\n\n', mean(bodylength)*scale/512);
-fprintf(fileID, '%s\t%s\t\n', 'Frame #', 'Length (mm)');
-fclose(fileID);
-dlmwrite([output_dir 'bodylength.csv'],[(startframe:endframe)', bodylength*scale/512],'delimiter','\t','-append');
 
 for j =1:nlegs
     if(missing(j))
@@ -143,9 +146,9 @@ title('Trajectory');
 axis([0 512 0 512]);
 axis square
 set(gca,'Ydir','reverse')
-if (~isempty(turn_points_idx))
-    labelpoints(turn_points(:,1)', turn_points(:,2)',turn_labels,'Center');
-end
+% if (~isempty(turn_points_idx))
+%     labelpoints(turn_points(:,1)', turn_points(:,2)', turn_labels, 'Center');
+% end
 export_fig([output_dir 'BodyTrajectory.pdf'], '-pdf','-transparent');
 
 %% Obtaining the CoM speed
@@ -158,11 +161,11 @@ f = fit((startframe + skip / 2: skip: endframe - skip/2)', B(startframe + skip /
 %Speedhist = hist(11000/512*f(i),(-20:0.5:50));
 Speed = [[1:nframes]'*fps_factor, f(i)/fps_factor*scale*1000/512];
 
-fileID = fopen([output_dir 'BodyVelocity.csv'],'w');
+fileID = fopen([output_dir 'BodyVelocity.xlsx'],'w');
 fprintf(fileID,'%s \t %s', 'Time(ms)', 'Velocity (mm/s)');
 fprintf(fileID,'\n');
 fclose(fileID);
-dlmwrite([output_dir 'BodyVelocity.csv'],Speed,'delimiter','\t','-append');
+dlmwrite([output_dir 'BodyVelocity.xlsx'],Speed,'delimiter','\t','-append');
 
 clf(1);
 figure(1);
@@ -277,13 +280,13 @@ export_fig([output_dir 'LegVerticalTrajectories.pdf'], '-pdf','-transparent');
 
 % legspd = legspd.*gait;
 
-fileID = fopen([output_dir 'LegSpeed.csv'],'w');
+fileID = fopen([output_dir 'LegSpeed.xlsx'],'w');
 fprintf(fileID,'%s \t %s \t', 'Time(ms)', legs_id{:});
 fprintf(fileID,'\n');
 fclose(fileID);
-dlmwrite([output_dir 'LegSpeed.csv'],[[1:nframes]'*fps_factor, legspd],'delimiter','\t','-append');
+dlmwrite([output_dir 'LegSpeed.xlsx'],[[1:nframes]'*fps_factor, legspd],'delimiter','\t','-append');
 
-% fileID = fopen([output_dir 'FootDragging.csv'],'w');
+% fileID = fopen([output_dir 'FootDragging.xlsx'],'w');
 % fprintf(fileID,'%s \t %s \t %s \n', 'Leg', 'StartFrame', 'EndFrame');
 % for j = 1 : nlegs
 %     cc = bwconncomp(foot_dragging(:,j));
@@ -321,11 +324,11 @@ end
 % Gait index averaged over a moving window of 80ms
 gaitindex = movmean(gaitindex,80/fps_factor);
 
-fileID = fopen([output_dir 'GaitIndex.csv'],'w');
+fileID = fopen([output_dir 'GaitIndex.xlsx'],'w');
 fprintf(fileID,'%s \t %s', 'Time(ms)', 'Gait Index');
 fprintf(fileID,'\n');
 fclose(fileID);
-dlmwrite([output_dir 'GaitIndex.csv'],[[1:nframes]'*fps_factor, gaitindex],'delimiter','\t','-append');
+dlmwrite([output_dir 'GaitIndex.xlsx'],[[1:nframes]'*fps_factor, gaitindex],'delimiter','\t','-append');
 
 clf(1);
 figure(1);
@@ -338,7 +341,7 @@ export_fig([output_dir 'GaitIndex.pdf'], '-pdf','-transparent');
 end
 
 %% Stride Parameters
-fileID = fopen([output_dir 'StrideParameters.csv'],'w');
+fileID = fopen([output_dir 'StrideParameters.xlsx'],'w');
 fclose(fileID);
 
 landing_std = zeros(nlegs,2);
@@ -353,7 +356,7 @@ for j = 1:nlegs
     nstrides(j) = cc.NumObjects;
     
     if(nstrides(j)==0)
-         fileID = fopen([output_dir 'StrideParameters.csv'],'a');
+         fileID = fopen([output_dir 'StrideParameters.xlsx'],'a');
         fprintf(fileID,'%s',legs_id{j});
         fprintf(fileID,'\n');
         fprintf(fileID,'%s \t', 'Stride #', 'Duration (ms)', 'Period (ms)', 'Displacement (mm)', 'Path Covered (mm)', 'Take-off time (ms)', 'Landing time (ms)', 'AEP x (mm)', 'AEP y (mm)', 'PEP x (mm)', 'PEP y (mm)', 'Amplitude (mm)', 'Stance linearity (mm)', 'Stretch (mm)');
@@ -374,7 +377,7 @@ for j = 1:nlegs
         Yinter= interp1(startframe-1 + stride_start(j,k):min(20,stride_duration(j,k)-1):startframe-1 + stride_start(j,k) + stride_duration(j,k),ny(startframe-1 + stride_start(j,k):min(20,stride_duration(j,k)-1):startframe-1 + stride_start(j,k)+stride_duration(j,k),j),startframe-1+stride_start(j,k):startframe-1+stride_start(j,k)+stride_duration(j,k),'spline');
         stride_amplitude(j,k) = ny(startframe-1 + stride_start(j,k)+stride_duration(j,k),j) - ny(startframe-1 + stride_start(j,k),j);
         stride_regularity(j,k) = mean(sqrt(sum(abs([nx(startframe-1+stride_start(j,k):startframe-1+stride_start(j,k)+stride_duration(j,k),j), ny(startframe-1+stride_start(j,k):startframe-1+stride_start(j,k)+stride_duration(j,k),j)] - [Xinter' Yinter']).^2,2)));
-        stretch(j,k) =  mean(sqrt(sum(nx(startframe-1+stride_start(j,k)+round(stride_duration(j,k)/2),j)^2+(ny(startframe-1+stride_start(j,k)+round(stride_duration(j,k)/2),j)-0.2*bodylength(startframe-1+stride_start(j,k)+round(stride_duration(j,k)/2)))^2)));
+        stretch(j,k) =  mean(sqrt(sum(nx(startframe-1+stride_start(j,k)+round(stride_duration(j,k)/2),j)^2+(ny(startframe-1+stride_start(j,k)+round(stride_duration(j,k)/2),j)-0.157*bodylength)^2)));
     end
     
     for k = 1 : nstrides(j)-1
@@ -403,17 +406,17 @@ for j = 1:nlegs
     total_path_length(j) = sum(path_length(j,:));
     mov_percentage(j) = sum(stride_duration(j,:))/nframes;
 
-    fileID = fopen([output_dir 'StrideParameters.csv'],'a');
+    fileID = fopen([output_dir 'StrideParameters.xlsx'],'a');
     fprintf(fileID,'%s',legs_id{j});
     fprintf(fileID,'\n');
     fprintf(fileID,'%s \t', 'Stride #', 'Duration (ms)', 'Period (ms)', 'Displacement (mm)', 'Path Covered (mm)', 'Take-off time (ms)', 'Landing time (ms)', 'AEP x (mm)', 'AEP y (mm)', 'PEP x (mm)', 'PEP y (mm)', 'Amplitude (mm)', 'Stance linearity (mm)', 'Stretch (mm)');
     fprintf(fileID,'\n');
     fclose(fileID);
-    dlmwrite([output_dir 'StrideParameters.csv'], [[1:nstrides(j)]' stride_duration(j,1:nstrides(j))'*fps_factor stride_period(j,1:nstrides(j))'*fps_factor stride_dist(j,1:nstrides(j))'*scale/512 path_length(j,1:nstrides(j))'*scale/512 stride_start(j,1:nstrides(j))'*fps_factor stride_end(j,1:nstrides(j))'*fps_factor landing(j,1:nstrides(j),1)'*scale/512 landing(j,1:nstrides(j),2)'*scale/512 takeoff(j,1:nstrides(j),1)'*scale/512 takeoff(j,1:nstrides(j),2)'*scale/512 stride_amplitude(j,1:nstrides(j))'*scale/512 stride_regularity(j,1:nstrides(j))'*scale/512 stretch(j,1:nstrides(j))'*scale/512],'delimiter','\t','-append');
-    fileID = fopen([output_dir 'StrideParameters.csv'],'a');
+    dlmwrite([output_dir 'StrideParameters.xlsx'], [[1:nstrides(j)]' stride_duration(j,1:nstrides(j))'*fps_factor stride_period(j,1:nstrides(j))'*fps_factor stride_dist(j,1:nstrides(j))'*scale/512 path_length(j,1:nstrides(j))'*scale/512 stride_start(j,1:nstrides(j))'*fps_factor stride_end(j,1:nstrides(j))'*fps_factor landing(j,1:nstrides(j),1)'*scale/512 landing(j,1:nstrides(j),2)'*scale/512 takeoff(j,1:nstrides(j),1)'*scale/512 takeoff(j,1:nstrides(j),2)'*scale/512 stride_amplitude(j,1:nstrides(j))'*scale/512 stride_regularity(j,1:nstrides(j))'*scale/512 stretch(j,1:nstrides(j))'*scale/512],'delimiter','\t','-append');
+    fileID = fopen([output_dir 'StrideParameters.xlsx'],'a');
     fprintf(fileID,'\n');
     fclose(fileID);
-    dlmwrite([output_dir 'StrideParameters.csv'], ['______________'],'delimiter','\t','-append');
+    dlmwrite([output_dir 'StrideParameters.xlsx'], ['______________'],'delimiter','\t','-append');
 end
 
 %% Path area covered
@@ -424,7 +427,7 @@ area_over_path = zeros(nlegs,1);
 pathpca = zeros(nlegs,2,2);
 centre = zeros(nlegs, 2);
 
-fileID = fopen([output_dir 'LegParameters.csv'],'w');
+fileID = fopen([output_dir 'LegParameters.xlsx'],'w');
 % fprintf(fileID,'%s \t', 'Leg', 'Movement %', 'Mean Stride Period (ms)', 'Total Path Covered (mm)', 'Mean Landing x (mm)', 'Mean Landing y (mm)', 'Mean Take-off x (mm)', 'Mean Take-off y (mm)', 'Std Landing x (mm)', 'Std Landing y (mm)', 'Std Take-off x (mm)', 'Std Take-off y (mm)', 'Domain Area (mm^2)', 'Domain Area / Path (mm)', 'Domain Length (mm)', 'Domain Width (mm)', 'Footprint/PCA deviation (deg)');
 fprintf(fileID,'%s \t', 'Leg', 'Movement %', 'Mean Stride Period (ms)', 'Total Path Covered (mm)', 'Mean AEP x (mm)', 'Mean AEP y (mm)', 'Mean PEP x (mm)', 'Mean PEP y (mm)', 'Std AEP (mm)', 'Std PEP (mm)', 'Domain Area (mm^2)', 'Domain Area / Path (mm)', 'Domain Length (mm)', 'Domain Width (mm)', 'Footprint/PCA deviation (deg)');
 fprintf(fileID,'\n');
@@ -466,7 +469,7 @@ title('Leg trajectories in body-centered frame of reference');
 
 export_fig([output_dir 'LegDomain.pdf'], '-pdf','-transparent');
 
-fileID = fopen([output_dir 'LegDomainOverlap.csv'],'w');
+fileID = fopen([output_dir 'LegDomainOverlap.xlsx'],'w');
 for j = 1:nlegs
      if(missing(j) || nstrides(j)==0)
         continue;
@@ -493,11 +496,12 @@ for j = 1:nlegs
 end
 fclose(fileID);
 
+
 %% Estimate leg lengths
 % imroi = imread([seg_dir 'roi_' num2str(1) '.png']);
 % imsize = size(imroi);
 % leglengths = zeros(endframe-startframe+1,nlegs);
-% body_length = mean(bodylength);
+
 % 
 % for i = startframe:endframe;
 %     imroi = imread([seg_dir 'roi_' num2str(i) '.png']);
@@ -540,7 +544,7 @@ fclose(fileID);
 % leglengths2 = leglengths;
 % leglengths2(find(isnan(leglengths))) = 0;
 % leglengths2(find(isinf(leglengths))) = 0;
-% fileID = fopen([output_dir 'Leglengths.csv'],'w');
+% fileID = fopen([output_dir 'Leglengths.xlsx'],'w');
 % for j = 1: nlegs
 %     fprintf(fileID,'\t%s',legs_id{j});
 % end
@@ -554,17 +558,17 @@ fclose(fileID);
 %     mean_ll(j) = mean(A(A>0));
 %     std_ll(j) = std(A(A>0));
 % end
-% dlmwrite([output_dir 'Leglengths.csv'],mean_ll*scale/512,'delimiter','\t','-append');
-% fileID = fopen([output_dir 'Leglengths.csv'],'a');
+% dlmwrite([output_dir 'Leglengths.xlsx'],mean_ll*scale/512,'delimiter','\t','-append');
+% fileID = fopen([output_dir 'Leglengths.xlsx'],'a');
 % fprintf(fileID,'\n');
 % fprintf(fileID, '%s\t', 'Std (mm)');
 % fclose(fileID);
-% dlmwrite([output_dir 'Leglengths.csv'],std_ll*scale/512,'delimiter','\t','-append');
-% fileID = fopen([output_dir 'Leglengths.csv'],'a');
+% dlmwrite([output_dir 'Leglengths.xlsx'],std_ll*scale/512,'delimiter','\t','-append');
+% fileID = fopen([output_dir 'Leglengths.xlsx'],'a');
 % fprintf(fileID,'\n');
 % fprintf(fileID,'Frame #\n');
 % fclose(fileID);
-% dlmwrite([output_dir 'Leglengths.csv'],[(startframe:endframe)', leglengths*scale/512],'delimiter','\t','-append');
+% dlmwrite([output_dir 'Leglengths.xlsx'],[(startframe:endframe)', leglengths*scale/512],'delimiter','\t','-append');
 % 
 % middlelegsAEP = sqrt((landing_mean(2,1)-landing_mean(5,1))^2+(landing_mean(2,2)-landing_mean(5,2))^2);
 % middlelegsPEP = sqrt((takeoff_mean(2,1)-takeoff_mean(5,1))^2+(takeoff_mean(2,2)-takeoff_mean(5,2))^2);
@@ -576,42 +580,84 @@ fclose(fileID);
 % middlelegs_spread2(find(isnan(middlelegs_spread))) = 0;
 % middlelegs_spread2(find(isnan(middlelegs_spread))) = 0;
 % 
-% fileID = fopen([output_dir 'MiddleLegsSpread.csv'],'w');
+% fileID = fopen([output_dir 'MiddleLegsSpread.xlsx'],'w');
 % fprintf(fileID, '%s\t%s\t%s\t%s\t\n', 'Mean Shortest Path Distance (mm)', 'Mean Horizontal Spread (mm)', 'Mean AEP Distance (mm)', 'Mean PEP Distance (mm)');
 % fprintf(fileID, '%0.3f\t', mean(middlelegs_dist2(middlelegs_dist2>0)) * scale/512, mean(middlelegs_spread2(middlelegs_spread2>0)) * scale / 512, middlelegsAEP * scale/512, middlelegsPEP * scale/512);
 % fprintf(fileID,'\n\n');
 % fprintf(fileID, '%s\t', 'Frame #', 'Shortest Path Distance (mm)', 'Horizontal Spread (mm)');
 % fprintf(fileID,'\n');
 % fclose(fileID);
-% dlmwrite([output_dir 'MiddleLegsSpread.csv'],[(startframe:endframe)', (middlelegs_dist*scale/512)', (middlelegs_spread*scale/512)'],'delimiter','\t','-append');
+% dlmwrite([output_dir 'MiddleLegsSpread.xlsx'],[(startframe:endframe)', (middlelegs_dist*scale/512)', (middlelegs_spread*scale/512)'],'delimiter','\t','-append');
 
 middlelegsAEP = sqrt((landing_mean(2,1)-landing_mean(5,1))^2+(landing_mean(2,2)-landing_mean(5,2))^2);
 middlelegsPEP = sqrt((takeoff_mean(2,1)-takeoff_mean(5,1))^2+(takeoff_mean(2,2)-takeoff_mean(5,2))^2);
 stancewidth = (middlelegsAEP + middlelegsPEP)/2;
 
-fileID = fopen([output_dir 'StanceWidth.csv'],'w');
+fileID = fopen([output_dir 'StanceWidth.xlsx'],'w');
 fprintf(fileID, '%s\t%s\t%s\n', 'Mean AEP Distance (mm)', 'Mean PEP Distance (mm)', 'Stance Width (mm)');
 fprintf(fileID, '%0.3f\t', middlelegsAEP * scale/512, middlelegsPEP * scale/512, stancewidth * scale / 512);
 fclose(fileID);
 
+
 %% Estimate angle subtended by leg from vertical axis
 % legangles = zeros(endframe-startframe+1,nlegs);
 % 
-% for i = startframe:endframe;
-%     for j = 1:nlegs
+% for i = startframe:endframe
+%     for j = 1:3
 %         if (nx(i,j)==0)
 %             legangles(i-startframe+1,j) = nan;
 %         else
-%             legangles(i-startframe+1,j) = atan2d(nx(i,j),ny(i,j)-0.2*body_length);
+%             legangles(i-startframe+1,j) = -mod(-atan2d(nx(i,j),ny(i,j)-0.157*bodylength)+360,360);
+%         end
+%     end
+%     for j = 4:6
+%         if (nx(i,j)==0)
+%             legangles(i-startframe+1,j) = nan;
+%         else
+%             legangles(i-startframe+1,j) = mod(atan2d(nx(i,j),ny(i,j)-0.157*bodylength)+360,360);
 %         end
 %     end
 % end
 % 
-% fileID = fopen([output_dir 'LegAngles.csv'],'w');
+% if ~exist([output_dir 'LegAngles'], 'dir')
+%    mkdir([output_dir 'LegAngles']);
+% end
+% 
+% fileID = fopen([output_dir 'LegAngles/LegAngles.xlsx'],'w');
 % fprintf(fileID,'%s \t %s \t', 'Time(ms)', legs_id{:});
 % fprintf(fileID,'\n');
 % fclose(fileID);
-% dlmwrite([output_dir 'LegAngles.csv'],[[1:nframes]'*fps_factor, legangles],'delimiter','\t','-append', 'precision','%.1f');
+% dlmwrite([output_dir 'LegAngles/LegAngles.xlsx'],[[1:nframes]'*fps_factor, legangles],'delimiter','\t','-append', 'precision','%.1f');
+% 
+% PEP_angles = cell(6,1);
+% AEP_angles = cell(6,1);
+% angle_variations = cell(6,1);
+% fileID = fopen([output_dir 'LegAngles/StrideVariation.xlsx'],'w');
+% for j = 1:size(stride_start,1)
+%     fprintf(fileID,'%s \n', legs_id{j});
+%     fprintf(fileID,'%s \t', 'Stride #', 'PEP Angle', 'AEP Angle', 'Angle Swiped');
+%     fprintf(fileID,'\n');
+%     for i = 1:size(stride_start,2)
+%         if (stride_start(j,i)==0)
+%             continue;
+%         end
+%         PEP_angles{j}(i) = legangles(stride_start(j,i),j);
+%         AEP_angles{j}(i) = legangles(stride_end(j,i),j);
+%         angle_variations{j}(i) = abs(legangles(stride_end(j,i),j)-legangles(stride_start(j,i),j));
+%         fprintf(fileID,'%d \t', i, PEP_angles{j}(i), AEP_angles{j}(i), angle_variations{j}(i));
+%         fprintf(fileID,'\n');
+%     end
+% end
+% fprintf(fileID,'\n');
+% fprintf(fileID,'\n');
+% 
+% fprintf(fileID,'%s \t', 'Leg', 'Mean PEP Angle', 'Std PEP Angle', 'Mean AEP Angle', 'Std AEP Angle', 'Mean Angle Swiped', 'Std Angle Swiped');
+% fprintf(fileID,'\n');
+% for j = 1:nlegs
+%     fprintf(fileID,'%s \t %d \t', legs_id{j}, mean(PEP_angles{j}), std(PEP_angles{j}), mean(AEP_angles{j}), std(AEP_angles{j}), mean(angle_variations{j}), std(angle_variations{j}));
+%     fprintf(fileID,'\n');
+% end
+% fclose(fileID);
 
 
 %% Project onto PCA eigenvectors to compute the domain length/width

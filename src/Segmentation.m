@@ -230,6 +230,8 @@ for i_sec = 1 : ceil(length(fn_list) / sample_ratio / sec_no)
         
         X{i_img,1} = I(:,:,1);
         X{i_img,2} = I(:,:,2);
+        
+        imwrite(imcrop(roi_images{i_img},[21 21 size(I,2)-41 size(I,1)-41]),[output_dir 'roi_' num2str(imgs_sec(i_img)) '.png'],'png');
     end
     
     score_images = batch_evaluate_boost_images(X,params,weak_learners,roi_images);
@@ -250,6 +252,5 @@ for i_sec = 1 : ceil(length(fn_list) / sample_ratio / sec_no)
         imshow(show_img_output);
         
         imwrite(imcrop(show_img_output,[21 21 size(I,2)-41 size(I,1)-41]),[output_dir 'img_' num2str(imgs_sec(i_img)) '.png'],'png');
-        imwrite(imcrop(roi_images{i_img},[21 21 size(I,2)-41 size(I,1)-41]),[output_dir 'roi_' num2str(imgs_sec(i_img)) '.png'],'png');
     end
 end

@@ -26,7 +26,7 @@ function varargout = FLLIT(varargin)
 
 % Edit the above text to modify the response to help FLLIT
 
-% Last Modified by GUIDE v2.5 11-Sep-2018 11:33:11
+% Last Modified by GUIDE v2.5 17-Oct-2019 18:20:06
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -249,6 +249,7 @@ hMainGui = getappdata(0, 'hMainGui');
 data_dir = getappdata(hMainGui, 'data_dir');
 pos_bs = strfind(data_dir,'Data');
 sub_dir = data_dir(pos_bs(end)+length('Data'):length(data_dir));
+seg_dir = ['./Results/SegmentedImages' sub_dir '/'];
 output_dir = ['./Results/Tracking/' sub_dir '/'];
 if(~exist(output_dir))
     mkdir(output_dir);
@@ -260,11 +261,11 @@ current_frame = getappdata(hMainGui,'current_frame');
 
 nLegs = 8 - handles.L4.Value - handles.R4.Value;
 
-trajectory(current_frame,1,1) = str2num(handles.Tracking_Text.String(1,9:11));
-trajectory(current_frame,1,2) = str2num(handles.Tracking_Text.String(1,13:15));
-norm_trajectory(current_frame,1,1) = cosd(CoM(current_frame,3))*((trajectory(current_frame,1,1)-CoM(current_frame,1))) + sind(CoM(current_frame,3))*((trajectory(current_frame,1,2)-CoM(current_frame,2)));
+trajectory(current_frame,2,1) = str2num(handles.Tracking_Text.String(2,9:11));
+trajectory(current_frame,2,2) = str2num(handles.Tracking_Text.String(2,13:15));
+norm_trajectory(current_frame,2,1) = cosd(CoM(current_frame,3))*((trajectory(current_frame,2,1)-CoM(current_frame,1))) + sind(CoM(current_frame,3))*((trajectory(current_frame,2,2)-CoM(current_frame,2)));
 
-if(strcmp(handles.Tracking.String, 'Initial') && norm_trajectory(current_frame,1,1)>0)
+if(strcmp(handles.Tracking.String, 'Initial') && norm_trajectory(current_frame,2,1)>0)
         CoM(current_frame,3) = mod(CoM(current_frame,3)+180,360);
         setappdata(hMainGui,'CoM',CoM);
         % find body_length
@@ -275,6 +276,7 @@ if(strcmp(handles.Tracking.String, 'Initial') && norm_trajectory(current_frame,1
         img_norm = imcrop(img_norm, [size(img_norm,1)/2-150 size(img_norm,2)/2-150 300 300]);
         [Y,X] = find(img_norm);
         bodylength = max(Y(find(X==150)))-min(Y(find(X==150)));
+        setappdata(hMainGui, 'bodylength', bodylength);
         handles.BLText.Visible = 'On';
         handles.BLText.Visible = 'On';
         handles.BodyLength.String = num2str(round(bodylength));
@@ -322,6 +324,7 @@ function prevframe_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 hMainGui = getappdata(0, 'hMainGui');
 data_dir = getappdata(hMainGui, 'data_dir');
+bodylength = getappdata(hMainGui, 'bodylength');
 pos_bs = strfind(data_dir,'Data');
 sub_dir = data_dir(pos_bs(end)+length('Data'):length(data_dir));
 seg_dir = ['./Results/SegmentedImages' sub_dir '/'];
@@ -343,11 +346,16 @@ switch display
         handles.GoToDropdown.String = 1:length(img_list);
         imshow([data_dir img_list(i).name]);
     case 2
+        roi_list = dir([seg_dir 'roi_*.png']);
+        handles.GoToDropdown.String = 1:length(roi_list);
+        imshow([seg_dir 'roi_' num2str(i) '.png']);
+    case 3
         seg_list = dir([seg_dir 'img_*.png']);
         handles.GoToDropdown.String = 1:length(seg_list);
         imshow([seg_dir 'img_' num2str(i) '.png']);
-    case 3
+    case 4
         handles.Tracking.String = 'Resume';
+        CoM = getappdata(hMainGui, 'CoM');
         trajectory = getappdata(hMainGui, 'trajectory');
 
         nLegs = 8 - handles.L4.Value - handles.R4.Value;
@@ -365,6 +373,7 @@ switch display
             handles.Tracking_Text.String = '';
             imshow([data_dir img_list(i).name]);
             hold on;
+            scatter(CoM(i,1)+sind(CoM(i,3))*.157*bodylength,CoM(i,2)-cosd(CoM(i,3))*.157*bodylength,'w*');
             for kk = 1:nLegs
                 if(eval(['handles.' legs_id{kk} '.Value']))
                     handles.Tracking_Text.String = [handles.Tracking_Text.String; sprintf('Leg %2s:        ', legs_id{kk})];
@@ -399,6 +408,7 @@ function nextframe_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 hMainGui = getappdata(0, 'hMainGui');
 data_dir = getappdata(hMainGui, 'data_dir');
+bodylength = getappdata(hMainGui, 'bodylength');
 pos_bs = strfind(data_dir,'Data');
 sub_dir = data_dir(pos_bs(end)+length('Data'):length(data_dir));
 seg_dir = ['./Results/SegmentedImages' sub_dir '/'];
@@ -420,10 +430,14 @@ switch display
         handles.GoToDropdown.String = 1:length(img_list);
         imshow([data_dir img_list(i).name]);
     case 2
+        roi_list = dir([seg_dir 'roi_*.png']);
+        handles.GoToDropdown.String = 1:length(roi_list);
+        imshow([seg_dir 'roi_' num2str(i) '.png']);
+    case 3
         seg_list = dir([seg_dir 'img_*.png']);
         handles.GoToDropdown.String = 1:length(seg_list);
         imshow([seg_dir 'img_' num2str(i) '.png']);
-    case 3
+    case 4
         CoM = getappdata(hMainGui, 'CoM');
         trajectory = getappdata(hMainGui, 'trajectory');
         norm_trajectory = getappdata(hMainGui, 'norm_trajectory');
@@ -447,6 +461,7 @@ switch display
                 handles.Tracking_Text.String = '';
                 imshow([data_dir img_list(i).name]);
                 hold on;
+                scatter(CoM(i,1)+sind(CoM(i,3))*.157*bodylength,CoM(i,2)-cosd(CoM(i,3))*.157*bodylength,'w*');
                 for kk = 1:nLegs
                     if(eval(['handles.' legs_id{kk} '.Value']))
                         handles.Tracking_Text.String = [handles.Tracking_Text.String; sprintf('Leg %2s:        ', legs_id{kk})];
@@ -545,6 +560,7 @@ switch display
             oriIm = im2double(imread([data_dir img_list(i).name]));
             imshow(oriIm);
             hold on;
+            scatter(CoM(i,1)+sind(CoM(i,3))*.157*bodylength,CoM(i,2)-cosd(CoM(i,3))*.157*bodylength,'w*');
             for kk = 1:nLegs
                 if (eval(['handles.' legs_id{kk} '.Value']))
                         trajectory(i,kk,1) = 0;
@@ -689,16 +705,17 @@ seg_dir = ['./Results/SegmentedImages' sub_dir '/'];
 
 seg_list = dir([seg_dir 'img_*.png']);
 if(~isempty(seg_list))
-    handles.ChooseDisplay.String{2} = 'Segmented';
-    handles.ChooseDisplay.Value = 2;
+    handles.ChooseDisplay.String{2} = 'ROI';
+    handles.ChooseDisplay.String{3} = 'Segmented';
+    handles.ChooseDisplay.Value = 3;
     segIm = im2double(imread([seg_dir seg_list(1).name]));
     imshow(segIm);
 end
 
 output_dir = ['./Results/Tracking' sub_dir '/'];
 if(exist([output_dir 'trajectory.mat']))
-    handles.ChooseDisplay.String{3} = 'Tracking';
-    handles.ChooseDisplay.Value = 3;
+    handles.ChooseDisplay.String{4} = 'Tracking';
+    handles.ChooseDisplay.Value = 4;
     handles.Progress.String = 'Tracking Complete.';
     set(handles.Text_Display, 'String', 'Tracking already completed for this folder');
     load([output_dir 'trajectory.mat']);
@@ -714,12 +731,17 @@ if(exist([output_dir 'trajectory.mat']))
     
     % find body_length
     i = startframe;
-    img = imread([seg_dir 'roi_' num2str(i) '.png']);
-    img_norm = imtranslate(img, [255 - CoM(i,1), 255 - CoM(i,2)]);
-    img_norm = imrotate(img_norm, CoM(i,3));
-    img_norm = imcrop(img_norm, [size(img_norm,1)/2-150 size(img_norm,2)/2-150 300 300]);
-    [Y,X] = find(img_norm);
-    bodylength = max(Y(find(X==150)))-min(Y(find(X==150)));
+    try
+        img = imread([seg_dir 'roi_' num2str(i) '.png']);
+        img_norm = imtranslate(img, [255 - CoM(i,1), 255 - CoM(i,2)]);
+        img_norm = imrotate(img_norm, CoM(i,3));
+        img_norm = imcrop(img_norm, [size(img_norm,1)/2-150 size(img_norm,2)/2-150 300 300]);
+        [Y,X] = find(img_norm);
+        bodylength = max(Y(find(X==150)))-min(Y(find(X==150)));
+    catch
+        bodylength = 130;
+    end
+    setappdata(hMainGui, 'bodylength', bodylength);
     handles.BLText.Visible = 'On';
     handles.BodyLength.Visible = 'On';
     handles.BodyLength.String = num2str(round(bodylength));
@@ -755,6 +777,7 @@ if(exist([output_dir 'trajectory.mat']))
     oriIm = im2double(imread([data_dir img_list(i).name]));
     imshow(oriIm);
     hold on;
+    scatter(CoM(i,1)+sind(CoM(i,3))*.157*bodylength,CoM(i,2)-cosd(CoM(i,3))*.157*bodylength,'w*');
     for kk = 1:size(trajectory,2)
         if(trajectory(i,kk,1)~=0)
             handles.Tracking_Text.String = [handles.Tracking_Text.String; sprintf('Leg %2s: %3d %3d', legs_id{kk}, trajectory(i,kk,1), trajectory(i,kk,2))]; 
@@ -777,6 +800,7 @@ if(exist([output_dir 'trajectory.mat']))
     end
     
 else
+    setappdata(hMainGui, 'bodylength', 0);
     setappdata(hMainGui, 'trajectory', []);
     setappdata(hMainGui, 'norm_trajectory', []);
     setappdata(hMainGui, 'CoM', []);
@@ -854,11 +878,12 @@ end
 set(handles.Text_Display, 'String', 'This is the background averaged over the dataset.');
 pause(5);
 
-if(length(handles.ChooseDisplay.String) <2)
-    handles.ChooseDisplay.String{2} = 'Segmented';
+if(length(handles.ChooseDisplay.String)<2)
+    handles.ChooseDisplay.String{2} = 'ROI';
+    handles.ChooseDisplay.String{3} = 'Segmented';
 end
 
-handles.ChooseDisplay.Value = 2;
+handles.ChooseDisplay.Value = 3;
 
 params = setup_config_L('Drive');
 
@@ -895,7 +920,8 @@ else
             show_img_output(:,:,1) = show_img_output(:,:,1) + pos_img;
             show_img_output(:,:,3) = show_img_output(:,:,3) + neg_img_body;
             imshow(show_img_output,[]);
-
+            pause(0.1);
+            
             data.train.imgs.X{i_img,1} = I / 255;
             data.train.imgs.X{i_img,2} = (ref_img - I) / 255;
 
@@ -1024,6 +1050,8 @@ for i_sec = 1 : ceil(length(fn_list) / sample_ratio / sec_no)
         
         X{i_img,1} = I(:,:,1);
         X{i_img,2} = I(:,:,2);
+        
+        imwrite(imcrop(roi_images{i_img},[21 21 size(I,2)-41 size(I,1)-41]),[output_dir 'roi_' num2str(imgs_sec(i_img)) '.png'],'png');
     end
     
     score_images = batch_evaluate_boost_images(X,params,weak_learners,roi_images);
@@ -1043,7 +1071,6 @@ for i_sec = 1 : ceil(length(fn_list) / sample_ratio / sec_no)
         show_img_output(:,:,1) = show_img_output(:,:,1) + est_leg;
         
         imwrite(imcrop(show_img_output,[21 21 size(I,2)-41 size(I,1)-41]),[output_dir 'img_' num2str(imgs_sec(i_img)) '.png'],'png');
-        imwrite(imcrop(roi_images{i_img},[21 21 size(I,2)-41 size(I,1)-41]),[output_dir 'roi_' num2str(imgs_sec(i_img)) '.png'],'png');
         if (i_img == 1)
             imshow(imcrop(show_img_output,[21 21 size(I,2)-41 size(I,1)-41]));
             handles.GoToDropdown.Value = (i_sec-1)*10 + i_img;
@@ -1071,6 +1098,7 @@ if(isempty(getappdata(hMainGui, 'trajectory')))
     setappdata(hMainGui, 'norm_trajectory', []);
     setappdata(hMainGui, 'start_frame', []);
 end
+bodylength = getappdata(hMainGui, 'bodylength');
 CoM = getappdata(hMainGui, 'CoM');
 trajectory = getappdata(hMainGui, 'trajectory');
 norm_trajectory = getappdata(hMainGui, 'norm_trajectory');
@@ -1082,6 +1110,7 @@ data_dir = ['./Data' sub_dir '/'];
 if(~isempty(dir([data_dir '*.tif'])))
     img_list = dir([data_dir '*.tif']);
 else
+
     img_list = dir([data_dir '*.bmp']);
 end
 output_dir = ['./Results/Tracking/' sub_dir '/'];
@@ -1089,8 +1118,8 @@ if(~exist(output_dir))
     mkdir(output_dir);
 end
 
-if(length(handles.ChooseDisplay.String) <3)
-    handles.ChooseDisplay.String{3} = 'Tracking';
+if(length(handles.ChooseDisplay.String)<4)
+    handles.ChooseDisplay.String{4} = 'Tracking';
 end
 
 removed_legs = handles.L1.Value+handles.L2.Value+handles.L3.Value+handles.L4.Value+handles.R1.Value+handles.R2.Value+handles.R3.Value+handles.R4.Value;
@@ -1117,7 +1146,7 @@ else
     drawnow
     
     end_frame = length(dir([seg_dir 'img_*.png']));
-    handles.ChooseDisplay.Value = 3;
+    handles.ChooseDisplay.Value = 4;
     
     %Manually initiate tracking by labeling leg tips on chosen frame 
     if(get(handles.ManualInitiate,'Value'))
@@ -1143,6 +1172,22 @@ else
         oriIm = im2double(imread([data_dir img_list(i).name]));
         imshow(oriIm);
         handles.Tracking.String = 'Initial';
+        
+        % find body_length
+        img = imread([seg_dir 'roi_' num2str(i) '.png']);
+        img_norm = imtranslate(img, [255 - CoM(i,1), 255 - CoM(i,2)]);
+        img_norm = imrotate(img_norm, CoM(i,3));
+        img_norm = imcrop(img_norm, [size(img_norm,1)/2-150 size(img_norm,2)/2-150 300 300]);
+        [Y,X] = find(img_norm);
+        bodylength = max(Y(find(X==150)))-min(Y(find(X==150)));
+        setappdata(hMainGui, 'bodylength', bodylength);
+        handles.BLText.Visible = 'On';
+        handles.BodyLength.Visible = 'On';
+        handles.BodyLength.String = num2str(round(bodylength));
+        ResetImageSize_Callback(hObject, eventdata, handles);
+        hold on
+        scatter(CoM(i,1)+sind(CoM(i,3))*.157*bodylength,CoM(i,2)-cosd(CoM(i,3))*.157*bodylength,'w*');
+        hold off
         
     %Automatically initiate tracking
     elseif(isempty(getappdata(hMainGui, 'start_frame')));
@@ -1251,11 +1296,12 @@ else
                 img_norm = imcrop(img_norm, [size(img_norm,1)/2-150 size(img_norm,2)/2-150 300 300]);
                 [Y,X] = find(img_norm);
                 bodylength = max(Y(find(X==150)))-min(Y(find(X==150)));
+                setappdata(hMainGui, 'bodylength', bodylength);
                 handles.BLText.Visible = 'On';
                 handles.BodyLength.Visible = 'On';
                 handles.BodyLength.String = num2str(round(bodylength));
                 ResetImageSize_Callback(hObject, eventdata, handles);
-                
+                scatter(CoM(i,1)+sind(CoM(i,3))*.157*bodylength,CoM(i,2)-cosd(CoM(i,3))*.157*bodylength,'w*');
                 for kk = 1:nLegs
                     if (eval(['handles.' legs_id{kk} '.Value']))
                         handles.Tracking_Text.String = [handles.Tracking_Text.String; sprintf('Leg %2s:        ', legs_id{kk})];
@@ -1267,79 +1313,84 @@ else
                 hold off;
                 drawnow
                 
-                for k = i-1 : -1 : 1
-                    Im = (imread([seg_dir 'img_' num2str(k) '.png']));
-                    Imroi = imread([seg_dir 'roi_' num2str(k) '.png']);
-
-                    % Fix image/segmentation irregularities
-                    Imwork = double(Im(:,:,1) == 255) .* Imroi;
-                    if (nLegs>6)
-                        Imwork = Imwork - (bwdist(imerode(Imroi,strel('disk',6)))<15);
-						Imwork = bwareaopen(Imwork>0,5);
-                    else
-                        Imwork = Imwork - (bwdist(imerode(Imroi,se))<10);
-						Imwork = bwareaopen(Imwork>0,3);
-                    end
-                    
-                    [locY,locX] = find(imerode(Imroi,se) > 0);
-                    
-                    [centre_of_mass,theta] = findCoM(locX,locY);
-
-                    if (abs(theta - CoM(k+1,3)) > 90 && abs(theta - CoM(k+1,3)) < 270)
-                        theta = mod(theta + 180,360);
-                    end
-
-                    CoM(k, :) = [centre_of_mass, theta];
-
-                    clear raw_tips;
-                    clear raw_normtips;
-                    
-                    [raw_tips, raw_normtips] = findtips(Imwork, Imroi, locX, locY, centre_of_mass, theta);
-                    
-                    x_t1 = raw_normtips;
-                    x_t0 = reshape(norm_trajectory(k+1,:),[nLegs 2]);
-                    target_indices = hungarianlinker(x_t0, x_t1, max_distance);
-
-                    for kk = 1:length(target_indices)
-                        if (target_indices(kk) > 0)
-                            norm_trajectory(k, kk, :) = raw_normtips(target_indices(kk),:);
-                            trajectory(k, kk, :) = raw_tips(target_indices(kk),:);
-                        else
-                            norm_trajectory(k, kk, :) = 0;
-                            trajectory(k, kk, :) = 0;
-                        end
-                    end
-
-                    leftoveridx = find(hungarianlinker(raw_normtips, x_t0, max_distance)==-1);
-                    x_t1 = raw_normtips(leftoveridx,:);
-                    x_t2 = raw_tips(leftoveridx,:);
-
-                    last_seen_tips = reshape(norm_trajectory(k,:),[nLegs 2]);
-                    unassigned_idx = find(last_seen_tips(:,1) == 0);
-                    for kk = 1:length(unassigned_idx)
-                        if(eval(['handles.' legs_id{unassigned_idx(kk)} '.Value']))
-                            continue;
-                        end
-                        idx = find(norm_trajectory(1:i,unassigned_idx(kk),1),1,'last');
-                        last_seen_tips(unassigned_idx(kk),:) = reshape(norm_trajectory(idx,unassigned_idx(kk),:), [1 2]);
-                    end
-
-                    if (~isempty(unassigned_idx) && ~isempty(x_t1))
-                            C = hungarianlinker(last_seen_tips(unassigned_idx,:), x_t1, 1.25*max_distance);
-                            for l = 1:length(C)
-                                if (C(l) ~= -1)
-                                    norm_trajectory(k,unassigned_idx(l), :) = x_t1(C(l), :);
-                                    trajectory(k,unassigned_idx(l), :) = x_t2(C(l), :);
-                                end
-                            end
-                    end
-                end
                 break
             else
                 continue;
             end 
         end
-    end    
+    end
+    
+    startframe = getappdata(hMainGui, 'start_frame');
+    if (~get(handles.ManualInitiate,'Value') && startframe>1)
+        for k = startframe-1 : -1 : 1
+            Im = (imread([seg_dir 'img_' num2str(k) '.png']));
+            Imroi = imread([seg_dir 'roi_' num2str(k) '.png']);
+
+            % Fix image/segmentation irregularities
+            Imwork = double(Im(:,:,1) == 255) .* Imroi;
+            if (nLegs>6)
+                Imwork = Imwork - (bwdist(imerode(Imroi,strel('disk',6)))<15);
+                Imwork = bwareaopen(Imwork>0,5);
+            else
+                Imwork = Imwork - (bwdist(imerode(Imroi,se))<10);
+                Imwork = bwareaopen(Imwork>0,3);
+            end
+
+            [locY,locX] = find(imerode(Imroi,se) > 0);
+
+            [centre_of_mass,theta] = findCoM(locX,locY);
+
+            if (abs(theta - CoM(k+1,3)) > 90 && abs(theta - CoM(k+1,3)) < 270)
+                theta = mod(theta + 180,360);
+            end
+
+            CoM(k, :) = [centre_of_mass, theta];
+
+            clear raw_tips;
+            clear raw_normtips;
+
+            [raw_tips, raw_normtips] = findtips(Imwork, Imroi, locX, locY, centre_of_mass, theta);
+
+            x_t1 = raw_normtips;
+            x_t0 = reshape(norm_trajectory(k+1,:),[nLegs 2]);
+            target_indices = hungarianlinker(x_t0, x_t1, max_distance);
+
+            for kk = 1:length(target_indices)
+                if (target_indices(kk) > 0)
+                    norm_trajectory(k, kk, :) = raw_normtips(target_indices(kk),:);
+                    trajectory(k, kk, :) = raw_tips(target_indices(kk),:);
+                else
+                    norm_trajectory(k, kk, :) = 0;
+                    trajectory(k, kk, :) = 0;
+                end
+            end
+
+            leftoveridx = find(hungarianlinker(raw_normtips, x_t0, max_distance)==-1);
+            x_t1 = raw_normtips(leftoveridx,:);
+            x_t2 = raw_tips(leftoveridx,:);
+
+            last_seen_tips = reshape(norm_trajectory(k,:),[nLegs 2]);
+            unassigned_idx = find(last_seen_tips(:,1) == 0);
+            for kk = 1:length(unassigned_idx)
+                if(eval(['handles.' legs_id{unassigned_idx(kk)} '.Value']))
+                    continue;
+                end
+                idx = find(norm_trajectory(1:startframe,unassigned_idx(kk),1),1,'last');
+                last_seen_tips(unassigned_idx(kk),:) = reshape(norm_trajectory(idx,unassigned_idx(kk),:), [1 2]);
+            end
+
+            if (~isempty(unassigned_idx) && ~isempty(x_t1))
+                    C = hungarianlinker(last_seen_tips(unassigned_idx,:), x_t1, 1.25*max_distance);
+                    for l = 1:length(C)
+                        if (C(l) ~= -1)
+                            norm_trajectory(k,unassigned_idx(l), :) = x_t1(C(l), :);
+                            trajectory(k,unassigned_idx(l), :) = x_t2(C(l), :);
+                        end
+                    end
+            end
+        end
+        setappdata(hMainGui, 'start_frame', 1);
+    end
     
     if (strcmp(handles.Tracking.String, 'Tracking') || strcmp(handles.Tracking.String, 'Resume'))
         handles.Tracking.String = 'Pause';
@@ -1435,6 +1486,7 @@ else
         oriIm = im2double(imread([data_dir img_list(i).name]));
         imshow(oriIm);
         hold on;
+        scatter(CoM(i,1)+sind(CoM(i,3))*.157*bodylength,CoM(i,2)-cosd(CoM(i,3))*.157*bodylength,'w*');
         for kk = 1:nLegs
             if (eval(['handles.' legs_id{kk} '.Value']))
                 trajectory(i,kk,1) = 0;
@@ -1591,12 +1643,12 @@ function Video_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 hMainGui = getappdata(0, 'hMainGui');
 data_dir = getappdata(hMainGui, 'data_dir');
+bodylength = getappdata(hMainGui, 'bodylength');
 pos_bs = strfind(data_dir,'Data');
 sub_dir = data_dir(pos_bs(end)+length('Data'):length(data_dir));
 tracking_dir = ['./Results/Tracking' sub_dir '/'];
 if (exist(['./Results/Tracking' sub_dir '/trajectory.mat']))
-    figure
-    Video_base(data_dir,30,str2num(handles.Video_Step.String),str2num(handles.VideoStartFrame.String),str2num(handles.VideoEndFrame.String));
+    Video_base(data_dir,30,str2num(handles.Video_Step.String),str2num(handles.VideoStartFrame.String),str2num(handles.VideoEndFrame.String), bodylength);
 else
     handles.Text_Display.String = 'Please ensure that tracking has been completed first.';
 end
@@ -1634,11 +1686,18 @@ switch display
         imshow(oriIm);
     case 2
         seg_dir = ['./Results/SegmentedImages' sub_dir '/'];
+        roi_list = dir([seg_dir 'roi_*.png']);
+        handles.GoToDropdown.String = 1:length(roi_list);
+        imshow([seg_dir 'roi_' num2str(i) '.png']);
+    case 3
+        seg_dir = ['./Results/SegmentedImages' sub_dir '/'];
         seg_list = dir([seg_dir 'img_*.png']);
         handles.GoToDropdown.String = 1:length(seg_list);
         imshow([seg_dir 'img_' num2str(i) '.png']);
-    case 3
+    case 4
         trajectory = getappdata(hMainGui, 'trajectory');
+        CoM = getappdata(hMainGui, 'CoM');
+        bodylength = getappdata(hMainGui, 'bodylength');
         startframe = 1;
         handles.Tracking_Text.String = '';
         
@@ -1661,6 +1720,7 @@ switch display
         end
         
         hold on;
+        scatter(CoM(i,1)+sind(CoM(i,3))*.157*bodylength,CoM(i,2)-cosd(CoM(i,3))*.157*bodylength,'w*');
         for kk = 1:nLegs
             if(eval(['handles.' legs_id{kk} '.Value']))
                 handles.Tracking_Text.String = [handles.Tracking_Text.String; sprintf('Leg %2s:        ', legs_id{kk})];
@@ -1781,8 +1841,8 @@ function VideoStartFrame_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 hMainGui = getappdata(0, 'hMainGui');
-if (str2num(hObject.String) < getappdata(hMainGui,'start_frame'))
-    hObject.String = num2str(getappdata(hMainGui,'start_frame'));
+if (str2num(hObject.String) < 1)
+    hObject.String = '1';
 end
 
 
@@ -1864,6 +1924,7 @@ if(isempty(getappdata(hMainGui, 'trajectory')))
     setappdata(hMainGui, 'norm_trajectory', []);
     setappdata(hMainGui, 'start_frame', []);
 end
+bodylength = getappdata(hMainGui, 'bodylength');
 CoM = getappdata(hMainGui, 'CoM');
 trajectory = getappdata(hMainGui, 'trajectory');
 norm_trajectory = getappdata(hMainGui, 'norm_trajectory');
@@ -1882,8 +1943,8 @@ if(~exist(output_dir))
     mkdir(output_dir);
 end
 
-if(length(handles.ChooseDisplay.String) <3)
-    handles.ChooseDisplay.String{3} = 'Tracking';
+if(length(handles.ChooseDisplay.String)<4)
+    handles.ChooseDisplay.String{4} = 'Tracking';
 end
 
 nLegs = 8 - handles.L4.Value - handles.R4.Value;
@@ -1916,6 +1977,7 @@ while (strcmp(handles.ViewTracking.String, 'Pause Viewing'))
         handles.Tracking_Text.String = '';
         imshow([data_dir img_list(i).name]);
         hold on;
+        scatter(CoM(i,1)+sind(CoM(i,3))*.157*bodylength,CoM(i,2)-cosd(CoM(i,3))*.157*bodylength,'w*');
         for kk = 1:nLegs
             if(eval(['handles.' legs_id{kk} '.Value']))
                 handles.Tracking_Text.String = [handles.Tracking_Text.String; sprintf('Leg %2s:        ', legs_id{kk})];
@@ -1961,8 +2023,12 @@ if(isempty(getappdata(hMainGui, 'data_dir')))
     defaultscale = {'11.0'};
     scale = inputdlg({'Image Size (mm)?'},'Image Size Input',1,defaultscale);
     scale = str2double(scale{:});
+    
+    defaultbodylength = {'2.90'};
+    bodylength = inputdlg({'Body length (mm)?'},'Input Body Length',1,defaultbodylength);
+    bodylength = str2double(bodylength{:});
 
-    DataProcessing_New(fps,tracking_dir,scale);
+    DataProcessing_New(fps, tracking_dir, scale, bodylength);
     set(handles.Text_Display, 'String', 'Data Processing complete.');
 else
     data_dir = getappdata(hMainGui, 'data_dir');
@@ -1974,7 +2040,11 @@ else
     defaultscale = {'11.0'};
     scale = inputdlg({'Image Size (mm)?'},'Image Size Input',1,defaultscale);
     scale = str2double(scale{:});
-
+    
+    defaultbodylength = {'2.90'};
+    bodylength = inputdlg({'Body length (mm)?'},'Input Body Length',1,defaultbodylength);
+    bodylength = str2double(bodylength{:});
+    
     pos_bs = strfind(data_dir,'Data');
     sub_dir = data_dir(pos_bs(end)+length('Data'):length(data_dir));
     tracking_dir = ['./Results/Tracking' sub_dir '/'];
@@ -1983,7 +2053,7 @@ else
     else
         set(handles.Text_Display, 'String', 'Analysing tracked data.');
         pause(0.5);
-        DataProcessing_New(fps,tracking_dir,scale);
+        DataProcessing_New(fps, tracking_dir, scale, bodylength);
         set(handles.Text_Display, 'String', 'Data Processing complete.');
     end
 end
@@ -2003,6 +2073,10 @@ defaultscale = {'11.0'};
 scale = inputdlg({'Image Size (mm)?'},'Image Size Input',1,defaultscale);
 scale = str2double(scale{:});
 
+defaultbodylength = {'2.90'};
+bodylength = inputdlg({'Body length (mm)?'},'Input Body Length',1,defaultbodylength);
+bodylength = str2double(bodylength{:});
+
 try
     if(data_dir==0)
         return;
@@ -2014,22 +2088,22 @@ if(isempty(data_dir))
     return;
 end
 for i = 1 : length(data_dir)
-    AnalyseFolder(data_dir{i},fps,scale);
+    AnalyseFolder(data_dir{i}, fps, scale, bodylength);
 end
 
-function AnalyseFolder(data_dir,fps,scale)
+function AnalyseFolder(data_dir, fps, scale, bodylength)
     pos_bs = strfind(data_dir,'Results');
     sub_dir = data_dir(pos_bs(end)+length('Results/Tracking/'):length(data_dir));
     output_dir = ['./Results/Tracking/' sub_dir '/'];
     if(~exist([output_dir 'trajectory.mat']))
         dir_fn = dir(output_dir);
         for i_dir = 1:length(dir_fn)-2
-            AnalyseFolder([output_dir '/' dir_fn(i_dir+2).name],fps,scale);
+            AnalyseFolder([output_dir '/' dir_fn(i_dir+2).name], fps, scale, bodylength);
             pause(1);
         end
     else
         try    
-            DataProcessing_New(fps,output_dir,scale);
+            DataProcessing_New(fps, output_dir, scale, bodylength);
         catch MExc
             fprintf('An error occured during data processing for the folder: %s.\n', data_dir);
             disp('Execution will continue.');
@@ -2045,14 +2119,78 @@ function figMain_WindowKeyPressFcn(hObject, eventdata, handles)
 %	Key: name of the key that was pressed, in lower case
 %	Character: character interpretation of the key(s) that was pressed
 %	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
-% handles    structure with handles and user data (see GUIDATA)
-if(strcmp(handles.nextframe.Enable,'On'))
+%   handles structure with handles and user data (see GUIDATA)
+hMainGui = getappdata(0, 'hMainGui');
+trajectory = getappdata(hMainGui, 'trajectory');
+last = max(length(trajectory),1);
+
+
+switch eventdata.Key
+    case '1', handles.Leg_L1.Value = 1;
+    case '2', handles.Leg_L2.Value = 1;
+    case '3', handles.Leg_L3.Value = 1;
+    case '4', handles.Leg_R1.Value = 1;
+    case '5', handles.Leg_R2.Value = 1;
+    case '6', handles.Leg_R3.Value = 1;
+    case '7', handles.Leg_L4.Value = 1;
+    case '8', handles.Leg_R4.Value = 1;
+    case 'home', handles.GoToDropdown.Value = 1; GoToDropdown_Callback(hObject, eventdata, handles);
+    case 'end', handles.GoToDropdown.Value = last; GoToDropdown_Callback(hObject, eventdata, handles);
+    case 'uparrow', handles.ChooseDisplay.Value = max(handles.ChooseDisplay.Value-1,1);
+        ChooseDisplay_Callback(hObject, eventdata, handles);
+    case 'downarrow', handles.ChooseDisplay.Value = min(handles.ChooseDisplay.Value+1, length(handles.ChooseDisplay.String));
+        ChooseDisplay_Callback(hObject, eventdata, handles);
+end
+if(strcmp(handles.nextframe.Enable,'on'))
     switch eventdata.Key
-        case 'leftarrow', prevframe_Callback(hObject, eventdata, handles);
-        case 'rightarrow', nextframe_Callback(hObject, eventdata, handles);
-        case 'uparrow', prevframe_Callback(hObject, eventdata, handles);
-        case 'downarrow', nextframe_Callback(hObject, eventdata, handles);
+        case 'leftarrow',
+            try
+                prevframe_Callback(hObject, eventdata, handles);
+            catch
+            end
+        case 'rightarrow', 
+            try
+                nextframe_Callback(hObject, eventdata, handles);
+            catch
+            end
     end
+end
+
+
+% --- Executes on slider movement.
+function ImageSizeSlider_Callback(hObject, eventdata, handles)
+% hObject    handle to ImageSizeSlider (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'Value') returns position of slider
+%        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
+
+handles.ImageSize.String = num2str(hObject.Value);
+
+
+function ImageSize_Callback(hObject, eventdata, handles)
+% hObject    handle to ImageSize (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of ImageSize as text
+%        str2double(get(hObject,'String')) returns contents of ImageSize as a double
+handles.ImageSizeSlider.Value = str2num(hObject.String);
+
+
+% --- Executes on button press in ResetImageSize.
+function ResetImageSize_Callback(hObject, eventdata, handles)
+% hObject    handle to ResetImageSize (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+bodylength = str2num(handles.BodyLength.String);
+if(bodylength>0)
+    handles.ImageSizeSlider.Value = round(128/bodylength*11*2)/2;
+    handles.ImageSize.String = num2str(round(128/bodylength*11*2)/2);
+else
+    handles.ImageSizeSlider.Value = 11;
+    handles.ImageSize.String = num2str(11);
 end
 
 
@@ -2107,41 +2245,4 @@ switch choice
         delete(hObject);
     case 'Cancel'
         return;
-end
-
-
-% --- Executes on slider movement.
-function ImageSizeSlider_Callback(hObject, eventdata, handles)
-% hObject    handle to ImageSizeSlider (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'Value') returns position of slider
-%        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
-
-handles.ImageSize.String = num2str(hObject.Value);
-
-
-function ImageSize_Callback(hObject, eventdata, handles)
-% hObject    handle to ImageSize (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'String') returns contents of ImageSize as text
-%        str2double(get(hObject,'String')) returns contents of ImageSize as a double
-handles.ImageSizeSlider.Value = str2num(hObject.String);
-
-
-% --- Executes on button press in ResetImageSize.
-function ResetImageSize_Callback(hObject, eventdata, handles)
-% hObject    handle to ResetImageSize (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-bodylength = str2num(handles.BodyLength.String);
-if(bodylength>0)
-    handles.ImageSizeSlider.Value = round(128/bodylength*11*2)/2;
-    handles.ImageSize.String = num2str(round(128/bodylength*11*2)/2);
-else
-    handles.ImageSizeSlider.Value = 11;
-    handles.ImageSize.String = num2str(11);
 end

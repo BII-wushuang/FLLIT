@@ -1,4 +1,4 @@
-function  [pos_img,neg_img_body,neg_img_bkg] = leg_segment_v2(I,ref_img,sil_thres)
+function  [pos_img,neg_img_body,neg_img_bkg] = leg_segment(I,ref_img,sil_thres)
 %pos_img: leg candidates on balck background
 %neg_img_body: body of fruit fly withous legs
 %neg_img_bkg: shade of fruit fly on white background
@@ -13,7 +13,7 @@ I = double(I);
 fly_silhouette = max(ref_img - I,0) ./ ref_img > sil_thres;
 %background segmentation, if the intensity ratio is greater than sil_thres,
 %then keep it
-fly_silhouette = bwareaopen(fly_silhouette, 500);
+fly_silhouette = bwareaopen(fly_silhouette, 200);
 %return 1 if the pixel is above the threshold (500)
 %fly_silhouette = imfill(fly_silhouette, 'holes');
 neg_img_bkg = ones(size(I)) - fly_silhouette;
