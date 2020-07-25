@@ -48,6 +48,24 @@ or download with [GitHub Desktop]( https://desktop.github.com/ ) (available on W
 
 ```chmod +x FLLIT```
 
+3) For the `Make Video' module, the [ffmpeg](https://ffmpeg.org/) libraries will be required.
+
+- For Ubuntu, install via apt-get:
+
+```sudo apt install ffmpeg```
+
+- For Windows, download from the following link:
+
+[https://ffmpeg.zeranoe.com/builds/win64/static/ffmpeg-4.3-win64-static.zip](https://ffmpeg.zeranoe.com/builds/win64/static/ffmpeg-4.3-win64-static.zip)
+
+and either extract ffmpeg.exe to this folder or add it to environment path
+
+- For MacOS, install via brew:
+
+```brew install ffmpeg```
+
+### Quick Start
+
 Further details about **FLLIT** can be found in the [readme](./Compiled/Readme.pdf).
 
 A video walkthrough of **FLLIT** is covered in the following link.
