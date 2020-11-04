@@ -15,14 +15,10 @@ end
 
 [thres, ~,~,ref_img,~] = video2background(data_dir, sub_dir);
 
-if(~isempty(dir([data_dir '*.tif'])))
-    fn_list = dir([data_dir '*.tif']);
-else
-    fn_list = dir([data_dir '*.bmp']);
-end
+img_list = load_img_list(data_dir);
 
-for i_img = 1 : length(fn_list)
-    I = imread([data_dir fn_list(i_img).name]);
+for i_img = 1 : length(img_list)
+    I = imread([data_dir img_list(i_img).name]);
     I = double(I);
     I = padarray(I,[20 20],'replicate');
 

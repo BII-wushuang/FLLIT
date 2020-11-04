@@ -12,11 +12,7 @@ pos_bs = strfind(data_dir,'Data');
 sub_dir = data_dir(pos_bs(end)+length('Data'):length(data_dir));
 seg_dir = ['./Results/SegmentedImages' sub_dir '/'];
 data_dir = ['./Data' sub_dir '/'];
-if(~isempty(dir([data_dir '*.tif'])))
-    img_list = dir([data_dir '*.tif']);
-else
-    img_list = dir([data_dir '*.bmp']);
-end
+img_list = load_img_list(data_dir);
 
 output_dir = ['./Results/Tracking' sub_dir '/'];
 if(~exist(output_dir))

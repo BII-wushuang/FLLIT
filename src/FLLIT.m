@@ -329,11 +329,7 @@ pos_bs = strfind(data_dir,'Data');
 sub_dir = data_dir(pos_bs(end)+length('Data'):length(data_dir));
 seg_dir = ['./Results/SegmentedImages' sub_dir '/'];
 data_dir = ['./Data' sub_dir '/'];
-if(~isempty(dir([data_dir '*.tif'])))
-    img_list = dir([data_dir '*.tif']);
-else
-    img_list = dir([data_dir '*.bmp']);
-end
+img_list = load_img_list(data_dir);
 
 setappdata(hMainGui,'current_frame', getappdata(hMainGui, 'current_frame') - 1);
 i = getappdata(hMainGui, 'current_frame');
@@ -413,11 +409,7 @@ pos_bs = strfind(data_dir,'Data');
 sub_dir = data_dir(pos_bs(end)+length('Data'):length(data_dir));
 seg_dir = ['./Results/SegmentedImages' sub_dir '/'];
 data_dir = ['./Data' sub_dir '/'];
-if(~isempty(dir([data_dir '*.tif'])))
-    img_list = dir([data_dir '*.tif']);
-else
-    img_list = dir([data_dir '*.bmp']);
-end
+img_list = load_img_list(data_dir);
 
 setappdata(hMainGui,'current_frame', getappdata(hMainGui, 'current_frame') + 1);
 i = getappdata(hMainGui, 'current_frame');
@@ -661,13 +653,9 @@ data_dir = ['./Data' sub_dir '/'];
 handles.Progress.String = '';
 handles.Tracking.String = 'Tracking';
 
-if(~isempty(dir([data_dir '*.tif'])))
-    img_list = dir([data_dir '*.tif']);
-else
-    img_list = dir([data_dir '*.bmp']);
-end
+img_list = load_img_list(data_dir);
 
-if(~isempty(dir([data_dir '*.tif'])) || ~isempty(dir([data_dir '*.bmp'])))
+if(~isempty(img_list))
     handles.Segmentation.Enable = 'On';
     handles.Tracking.Enable = 'On';
     handles.Adjust_Prediction.Enable = 'On';
@@ -835,13 +823,9 @@ if(~exist(output_dir))
     mkdir(output_dir);
 end
 
-if(~isempty(dir([data_dir '*.tif'])))
-    fn_list = dir([data_dir '*.tif']);
-else
-    fn_list = dir([data_dir '*.bmp']);
-end
+img_list = load_img_list(data_dir);
 
-I = imread([data_dir fn_list(1).name]);
+I = imread([data_dir img_list(1).name]);
 
 if(~isempty(dir([data_dir 'Background/'])))
     if (exist([data_dir 'Background/Background.png']))
@@ -909,9 +893,9 @@ else
         data = [];
 
         % Collect the positive and negative samples
-        for i_img = 1 : floor(length(fn_list) / sample_ratio)
+        for i_img = 1 : floor(length(img_list) / sample_ratio)
 
-            I = imread([data_dir fn_list(i_img * sample_ratio).name]); 
+            I = imread([data_dir img_list(i_img * sample_ratio).name]); 
             I = double(I);
             I = padarray(I,[20 20],'replicate');
 
@@ -944,7 +928,7 @@ else
             neg_bkg_sampling = find(neg_img_bkg & (~border_img));
 
             % sample counts
-            imgs_no = floor(length(fn_list) / sample_ratio);
+            imgs_no = floor(length(img_list) / sample_ratio);
             npos_img = ceil(params.pos_samples_no / imgs_no);
             nneg_img = ceil(params.neg_samples_no / imgs_no);
 
@@ -969,9 +953,9 @@ else
         samples_idx = [];
         
         % Preparing the samples
-        for i_img = 1 : floor(length(fn_list) / sample_ratio)
+        for i_img = 1 : floor(length(img_list) / sample_ratio)
 
-            I = imread([data_dir fn_list(i_img * sample_ratio).name]);
+            I = imread([data_dir img_list(i_img * sample_ratio).name]);
             I = padarray(I,[20 20],'replicate');
 
             samp_idx = [good_sampling_idx{i_img}.pos ; good_sampling_idx{i_img}.neg];
@@ -1023,16 +1007,16 @@ fprintf('Output directory: %s\n', output_dir);
 sample_ratio = 1;
 sec_no = 10;
 
-for i_sec = 1 : ceil(length(fn_list) / sample_ratio / sec_no)
+for i_sec = 1 : ceil(length(img_list) / sample_ratio / sec_no)
     X = [];
-    if (i_sec < ceil(length(fn_list) / sample_ratio / sec_no))
+    if (i_sec < ceil(length(img_list) / sample_ratio / sec_no))
         imgs_sec = 1 + (i_sec - 1) * sec_no : sample_ratio :(i_sec) * sec_no;
     else
-        imgs_sec = 1 + (i_sec - 1) * sec_no : sample_ratio : length(fn_list);
+        imgs_sec = 1 + (i_sec - 1) * sec_no : sample_ratio : length(img_list);
     end
       
     for i_img = 1 : length(imgs_sec)
-        I = imread([data_dir fn_list(imgs_sec(i_img)).name]);
+        I = imread([data_dir img_list(imgs_sec(i_img)).name]);
         I = double(I);
         I = padarray(I,[20 20],'replicate');
         
@@ -1057,7 +1041,7 @@ for i_sec = 1 : ceil(length(fn_list) / sample_ratio / sec_no)
     score_images = batch_evaluate_boost_images(X,params,weak_learners,roi_images);
     
     for i_img = 1 : length(imgs_sec)
-        I = imread([data_dir fn_list(imgs_sec(i_img)).name]);        
+        I = imread([data_dir img_list(imgs_sec(i_img)).name]);        
         I = double(I)/255;
         I = padarray(I,[20 20],'replicate');       
         
@@ -1074,7 +1058,7 @@ for i_sec = 1 : ceil(length(fn_list) / sample_ratio / sec_no)
         if (i_img == 1)
             imshow(imcrop(show_img_output,[21 21 size(I,2)-41 size(I,1)-41]));
             handles.GoToDropdown.Value = (i_sec-1)*10 + i_img;
-            handles.Progress.String = ['Segmentation Progress: ' num2str(min(i_sec*10,length(fn_list))) '/' num2str(length(fn_list))];
+            handles.Progress.String = ['Segmentation Progress: ' num2str(min(i_sec*10,length(img_list))) '/' num2str(length(img_list))];
             pause(0.5);
         end
     end
@@ -1107,12 +1091,8 @@ pos_bs = strfind(data_dir,'Data');
 sub_dir = data_dir(pos_bs(end)+length('Data'):length(data_dir));
 seg_dir = ['./Results/SegmentedImages' sub_dir '/'];
 data_dir = ['./Data' sub_dir '/'];
-if(~isempty(dir([data_dir '*.tif'])))
-    img_list = dir([data_dir '*.tif']);
-else
+img_list = load_img_list(data_dir);
 
-    img_list = dir([data_dir '*.bmp']);
-end
 output_dir = ['./Results/Tracking/' sub_dir '/'];
 if(~exist(output_dir))
     mkdir(output_dir);
@@ -1670,11 +1650,8 @@ data_dir = getappdata(hMainGui, 'data_dir');
 pos_bs = strfind(data_dir,'Data');
 sub_dir = data_dir(pos_bs(end)+length('Data'):length(data_dir));
 data_dir = ['./Data' sub_dir '/'];
-if(~isempty(dir([data_dir '*.tif'])))
-    img_list = dir([data_dir '*.tif']);
-else
-    img_list = dir([data_dir '*.bmp']);
-end
+img_list = load_img_list(data_dir);
+
 oriIm = im2double(imread([data_dir img_list(i).name]));
 imshow(oriIm);
 
@@ -1933,11 +1910,8 @@ pos_bs = strfind(data_dir,'Data');
 sub_dir = data_dir(pos_bs(end)+length('Data'):length(data_dir));
 seg_dir = ['./Results/SegmentedImages' sub_dir '/'];
 data_dir = ['./Data' sub_dir '/'];
-if(~isempty(dir([data_dir '*.tif'])))
-    img_list = dir([data_dir '*.tif']);
-else
-    img_list = dir([data_dir '*.bmp']);
-end
+img_list = load_img_list(data_dir);
+
 output_dir = ['./Results/Tracking/' sub_dir '/'];
 if(~exist(output_dir))
     mkdir(output_dir);

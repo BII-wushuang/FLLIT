@@ -14,17 +14,11 @@ end
 m_img_fn = [dir_result  sub_dir '_Mean.mat'];
 std_img_fn = [dir_result  sub_dir '_Std.mat'];
 
-if (~isempty(dir([data_dir '*.tif'])))
-    fn_list = dir([data_dir '*.tif']);
-    %fly_sz = [100 100];
-else
-    fn_list = dir([data_dir '*.bmp']);
-    %fly_sz = [250 250];
-end
+img_list = load_img_list(data_dir);
 
-n_imgs = length(fn_list);
+n_imgs = length(img_list);
 
-I = imread([data_dir fn_list(1).name]);
+I = imread([data_dir img_list(1).name]);
 
 mean_I = zeros(size(I)+40);
 
@@ -33,8 +27,8 @@ if(exist(m_img_fn))
     load(std_img_fn);
 else
     
-    for i_img = 1 : length(fn_list)
-        I = imread([data_dir fn_list(i_img).name]);
+    for i_img = 1 : length(img_list)
+        I = imread([data_dir img_list(i_img).name]);
         I = double(I);
         I = padarray(I,[20 20],'replicate');
         mean_I = mean_I + I;
@@ -43,8 +37,8 @@ else
     mean_I = mean_I / n_imgs;
     std_I = zeros(size(mean_I));
     
-    for i_img = 1 : length(fn_list)
-        I = imread([data_dir fn_list(i_img).name]);
+    for i_img = 1 : length(img_list)
+        I = imread([data_dir img_list(i_img).name]);
         I = double(I);
         I = padarray(I,[20 20],'replicate');
         std_I = abs(I - mean_I) + std_I;
@@ -63,8 +57,8 @@ thres = 0.1;
 
 sample_ratio = 25;
 
-for i_img = 1 : floor(length(fn_list) / sample_ratio)
-    I = imread([data_dir fn_list(i_img * sample_ratio).name]);
+for i_img = 1 : floor(length(img_list) / sample_ratio)
+    I = imread([data_dir img_list(i_img * sample_ratio).name]);
     I = double(I);
     I = padarray(I,[20 20],'replicate');
     tmp_mask =  (max(mean_I - I,0) ./ mean_I) < thres;
