@@ -1,5 +1,5 @@
 <deployment-project plugin="plugin.ezdeploy" plugin-version="1.0">
-  <configuration build-checksum="3201117534" file="/home/wushuang/GitHub/FLLIT/src/FLLIT_compile.prj" location="/home/wushuang/GitHub/FLLIT/src" name="FLLIT_compile" preferred-package-location="/home/wushuang/GitHub/FLLIT/src/FLLIT_compile/for_redistribution" preferred-package-type="package.type.install" target="target.ezdeploy.standalone" target-name="Application Compiler">
+  <configuration build-checksum="507265680" file="/media/shuang/Data/Github/FLLIT/src/FLLIT_compile.prj" location="/media/shuang/Data/Github/FLLIT/src" name="FLLIT_compile" preferred-package-location="/media/shuang/Data/Github/FLLIT/src/FLLIT_compile/for_redistribution" preferred-package-type="package.type.install" target="target.ezdeploy.standalone" target-name="Application Compiler">
     <param.appname>FLLIT</param.appname>
     <param.icon />
     <param.icons />
@@ -138,6 +138,7 @@
       <file>${PROJECT_ROOT}/hungarianlinker.m</file>
       <file>${PROJECT_ROOT}/intersections.m</file>
       <file>${PROJECT_ROOT}/leg_segment.m</file>
+      <file>${PROJECT_ROOT}/load_img_list.m</file>
       <file>${PROJECT_ROOT}/mtit.m</file>
       <file>${PROJECT_ROOT}/munkres.m</file>
       <file>${PROJECT_ROOT}/skeleton.m</file>
@@ -146,14 +147,14 @@
       <file>${PROJECT_ROOT}/video2background.m</file>
     </fileset.depfun>
     <build-deliverables>
-      <file location="${PROJECT_ROOT}/FLLIT_compile/for_testing" name="FLLIT" optional="false">/home/wushuang/GitHub/FLLIT/src/FLLIT_compile/for_testing/FLLIT</file>
-      <file location="${PROJECT_ROOT}/FLLIT_compile/for_testing" name="readme.txt" optional="true">/home/wushuang/GitHub/FLLIT/src/FLLIT_compile/for_testing/readme.txt</file>
-      <file location="${PROJECT_ROOT}/FLLIT_compile/for_testing" name="run_FLLIT.sh" optional="false">/home/wushuang/GitHub/FLLIT/src/FLLIT_compile/for_testing/run_FLLIT.sh</file>
-      <file location="${PROJECT_ROOT}/FLLIT_compile/for_testing" name="splash.png" optional="false">/home/wushuang/GitHub/FLLIT/src/FLLIT_compile/for_testing/splash.png</file>
+      <file location="${PROJECT_ROOT}/FLLIT_compile/for_testing" name="run_FLLIT.sh" optional="false">/media/shuang/Data/Github/FLLIT/src/FLLIT_compile/for_testing/run_FLLIT.sh</file>
+      <file location="${PROJECT_ROOT}/FLLIT_compile/for_testing" name="FLLIT" optional="false">/media/shuang/Data/Github/FLLIT/src/FLLIT_compile/for_testing/FLLIT</file>
+      <file location="${PROJECT_ROOT}/FLLIT_compile/for_testing" name="splash.png" optional="false">/media/shuang/Data/Github/FLLIT/src/FLLIT_compile/for_testing/splash.png</file>
+      <file location="${PROJECT_ROOT}/FLLIT_compile/for_testing" name="readme.txt" optional="true">/media/shuang/Data/Github/FLLIT/src/FLLIT_compile/for_testing/readme.txt</file>
     </build-deliverables>
     <workflow />
     <matlab>
-      <root>/home/wushuang/MATLAB/R2016a</root>
+      <root>/home/shuang/MATLAB/R2016a</root>
       <toolboxes />
     </matlab>
     <platform>
@@ -165,7 +166,7 @@
       <vista>false</vista>
       <linux>true</linux>
       <solaris>false</solaris>
-      <osver>5.0.0-37-generic</osver>
+      <osver>4.15.0-122-generic</osver>
       <os32>false</os32>
       <os64>true</os64>
       <arch>glnxa64</arch>

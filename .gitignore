@@ -3,5 +3,6 @@
 Thumbs.db
 
 # Results
-Results/
+Compiled/Data
+Compiled/Results
 src/FLLIT_compile
