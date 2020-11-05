@@ -64,6 +64,14 @@ and either extract ffmpeg.exe to this folder or add it to environment path
 
 ```brew install ffmpeg```
 
+4) If the images cannot be read, please rescale them to 512x512 pixels and ensure that the image format is one of the following: ".tif", ".tiff", ".bmp", ".png", ".jpg", ".jpeg".
+
+5) If the following error message occurs during tracking ```Operands to the || and && operators must be convertible to logical scalar values.```, please follow the steps below to manually initialize tracking
+
+- Navigate to frame 1,     check the “**Manually Initiate Tracking**” checkbox and click on the **Tracking** button. The **Tracking** button will display **Initial**.
+- Click on the **Adjust Prediction** button.  Select the legs and double click on its tip position on the image to mark its coordinates. 
+- After annotating all 6 legs, click the **Save and Exit** button to record the changes. **Resume** the tracking with this manually initialized data.
+
 ### Quick Start
 
 Further details about **FLLIT** can be found in the [readme](./Compiled/Readme.pdf).
