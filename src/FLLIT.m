@@ -26,7 +26,7 @@ function varargout = FLLIT(varargin)
 
 % Edit the above text to modify the response to help FLLIT
 
-% Last Modified by GUIDE v2.5 17-Oct-2019 18:20:06
+% Last Modified by GUIDE v2.5 04-Nov-2021 00:00:59
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -628,6 +628,8 @@ end
 handles.BLText.Visible = 'Off';
 handles.BodyLength.Visible = 'Off';
 handles.BodyLength.String = '0';
+handles.ViewBackground.Enable = 'Off';
+handles.Foreground.Enable = 'Off';
 handles.Segmentation.Enable = 'Off';
 handles.Tracking.Enable = 'Off';
 handles.Adjust_Prediction.Enable = 'Off';
@@ -656,6 +658,8 @@ handles.Tracking.String = 'Tracking';
 img_list = load_img_list(data_dir);
 
 if(~isempty(img_list))
+    handles.ViewBackground.Enable = 'On';
+    handles.Foreground.Enable = 'On';
     handles.Segmentation.Enable = 'On';
     handles.Tracking.Enable = 'On';
     handles.Adjust_Prediction.Enable = 'On';
@@ -677,6 +681,8 @@ if(~isempty(img_list))
     oriIm = im2double(imread([data_dir img_list(1).name]));
     imshow(oriIm);
 else
+    handles.ViewBackground.Enable = 'Off';
+    handles.Foreground.Enable = 'Off';
     handles.Segmentation.Enable = 'Off';
     handles.Tracking.Enable = 'Off';
     handles.Video.Enable = 'Off';
@@ -819,58 +825,20 @@ pos_bs = strfind(data_dir,'Data');
 sub_dir = data_dir(pos_bs(end)+length('Data'):length(data_dir));
 data_dir = ['./Data' sub_dir '/'];
 output_dir = ['./Results/SegmentedImages' sub_dir '/'];
-if(~exist(output_dir))
-    mkdir(output_dir);
-end
 
-img_list = load_img_list(data_dir);
-
-I = imread([data_dir img_list(1).name]);
-
-if(~isempty(dir([data_dir 'Background/'])))
-    if (exist([data_dir 'Background/Background.png']))
-        ref_img = imread([data_dir 'Background/Background.png']);
-        ref_img = double(ref_img);
-        ref_img = padarray(ref_img,[20 20],'replicate');
-        thres = 0.1;
-        imshow(imcrop(ref_img,[21 21 size(I,2)-1 size(I,1)-1]),[]);
-    else
-        try
-            background = dir([data_dir 'Background/']);
-            ref_img = imread([data_dir 'Background/' background(3).name]);
-            ref_img = double(ref_img);
-            ref_img = padarray(ref_img,[20 20],'replicate');
-            thres = 0.1;
-            imshow(imcrop(ref_img,[21 21 size(I,2)-1 size(I,1)-1]),[]);
-        catch
-            [thres,~,~,ref_img,~] = video2background(data_dir, sub_dir);
-            imshow(imcrop(ref_img,[21 21 size(I,2)-1 size(I,1)-1]),[]);
-            if(~exist([data_dir 'Background']))
-                mkdir([data_dir 'Background'])
-            end
-            imwrite(uint8(imcrop(ref_img,[21 21 size(I,2)-1 size(I,1)-1])),[data_dir 'Background/Background.png'], 'png');
-        end
-    end
-else
-    [thres,~,~,ref_img,~] = video2background(data_dir, sub_dir);
-    imshow(imcrop(ref_img,[21 21 size(I,2)-1 size(I,1)-1]),[]);
-    if(~exist([data_dir 'Background']))
-        mkdir([data_dir 'Background'])
-    end
-    imwrite(uint8(imcrop(ref_img,[21 21 size(I,2)-1 size(I,1)-1])),[data_dir 'Background/Background.png'], 'png');
-end
-set(handles.Text_Display, 'String', 'This is the background averaged over the dataset.');
-pause(5);
-
-if(length(handles.ChooseDisplay.String)<2)
-    handles.ChooseDisplay.String{2} = 'ROI';
-    handles.ChooseDisplay.String{3} = 'Segmented';
+if (~exist([output_dir '/roi_1.png']))
+    pause(1);
+    Foreground_Callback(hObject, eventdata, handles);
 end
 
 handles.ChooseDisplay.Value = 3;
 
-params = setup_config_L('Drive');
+ref_img = imread([data_dir 'Background/Background.png']);
+ref_img = double(ref_img);
+ref_img = padarray(ref_img,[20 20],'replicate');
+img_list = load_img_list(data_dir);
 
+params = setup_config_L('Drive');
 %params = setup_lists(params);
 %params = setup_directories_L(params);
 params.border_skip_size = 20;
@@ -879,7 +847,9 @@ params.neg_samples_no = 30000;
 params.sample_size = [41 41]';
 
 load_wl = handles.LoadClassifier.Value;
-score_thres = str2num(handles.SegmentationConfidence.String);
+
+foreground_thres = handles.ForegroundSlider.Value;
+score_thres = handles.SegmentationSlider.Value;
 if (load_wl)
     set(handles.Text_Display, 'String','Please select the trained classifier to be used.');
     [wl_file, wl_dir] = uigetfile(['./Results/Classifiers/','*.mat']);
@@ -899,7 +869,7 @@ else
             I = double(I);
             I = padarray(I,[20 20],'replicate');
 
-            [pos_img,neg_img_body,neg_img_bkg] = leg_segment(I,ref_img,thres);
+            [pos_img,neg_img_body,neg_img_bkg] = leg_segment(I,ref_img,foreground_thres);
             show_img_output = repmat(I/255,[1 1 3]);
             show_img_output(:,:,1) = show_img_output(:,:,1) + pos_img;
             show_img_output(:,:,3) = show_img_output(:,:,3) + neg_img_body;
@@ -1018,10 +988,7 @@ for i_sec = 1 : ceil(length(img_list) / sample_ratio / sec_no)
     for i_img = 1 : length(imgs_sec)
         I = imread([data_dir img_list(imgs_sec(i_img)).name]);
         I = double(I);
-        I = padarray(I,[20 20],'replicate');
-        
-        roi_img = (max(ref_img - I(:,:,1),0) ./ ref_img) > thres;
-        roi_img = bwareaopen(roi_img, 200);
+        I = padarray(I,[20 20],'replicate'); 
         
         %neg_img{i_img} = leg_segment_clean(I,roi_img);
         
@@ -1030,12 +997,11 @@ for i_sec = 1 : ceil(length(img_list) / sample_ratio / sec_no)
 
         I = I / 255;    
         
-        roi_images{i_img} = roi_img;
-        
         X{i_img,1} = I(:,:,1);
         X{i_img,2} = I(:,:,2);
         
-        imwrite(imcrop(roi_images{i_img},[21 21 size(I,2)-41 size(I,1)-41]),[output_dir 'roi_' num2str(imgs_sec(i_img)) '.png'],'png');
+        roi_img = imread([output_dir 'roi_' num2str(imgs_sec(i_img)) '.png']);
+        roi_images{i_img} = padarray(roi_img,[20 20],'replicate'); 
     end
     
     score_images = batch_evaluate_boost_images(X,params,weak_learners,roi_images);
@@ -1059,7 +1025,7 @@ for i_sec = 1 : ceil(length(img_list) / sample_ratio / sec_no)
             imshow(imcrop(show_img_output,[21 21 size(I,2)-41 size(I,1)-41]));
             handles.GoToDropdown.Value = (i_sec-1)*10 + i_img;
             handles.Progress.String = ['Segmentation Progress: ' num2str(min(i_sec*10,length(img_list))) '/' num2str(length(img_list))];
-            pause(0.5);
+            pause(0.1);
         end
     end
 end
@@ -1756,7 +1722,7 @@ end
 
 
 function ProcessFolder(data_dir, answer, handles)
-score_thres = str2num(handles.SegmentationConfidence.String);
+score_thres = str2num(handles.SegmentationEdit.String);
 pos_bs = strfind(data_dir,'Data');
 sub_dir = data_dir(pos_bs(end)+length('Data'):length(data_dir));
 if(exist(data_dir) && isempty(dir([data_dir '/*.tif'])) && isempty(dir([data_dir '/*.bmp'])))
@@ -1839,25 +1805,47 @@ end
 
 
 %% --- Change segmentation threshold via slider
-function SlideThreshold_Callback(hObject, eventdata, handles)
-% hObject    handle to SlideThreshold (see GCBO)
+function SegmentationSlider_Callback(hObject, eventdata, handles)
+% hObject    handle to SegmentationSlider (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hints: get(hObject,'Value') returns position of slider
 %        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
-handles.SegmentationConfidence.String = num2str(handles.SlideThreshold.Value);
+handles.SegmentationEdit.String = num2str(handles.SegmentationSlider.Value);
 
 
 %% --- Change segmentation threshold via numerical input
-function SegmentationConfidence_Callback(hObject, eventdata, handles)
-% hObject    handle to SegmentationConfidence (see GCBO)
+function SegmentationEdit_Callback(hObject, eventdata, handles)
+% hObject    handle to SegmentationEdit (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: get(hObject,'String') returns contents of SegmentationConfidence as text
-%        str2double(get(hObject,'String')) returns contents of SegmentationConfidence as a double
-handles.SlideThreshold.Value = str2num(handles.SegmentationConfidence.String);
+% Hints: get(hObject,'String') returns contents of SegmentationEdit as text
+%        str2double(get(hObject,'String')) returns contents of SegmentationEdit as a double
+handles.SegmentationSlider.Value = str2num(handles.SegmentationEdit.String);
+
+
+%% --- Change foreground threshold via slider
+function ForegroundSlider_Callback(hObject, eventdata, handles)
+% hObject    handle to SegmentationSlider (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'Value') returns position of slider
+%        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
+handles.ForegroundEdit.String = num2str(handles.ForegroundSlider.Value);
+
+
+%% --- Change foreground threshold via numerical input
+function ForegroundEdit_Callback(hObject, eventdata, handles)
+% hObject    handle to SegmentationEdit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of SegmentationEdit as text
+%        str2double(get(hObject,'String')) returns contents of SegmentationEdit as a double
+handles.ForegroundSlider.Value = str2num(handles.ForegroundEdit.String);
 
 
 %% --- Executes when figMain is resized.
@@ -2065,6 +2053,7 @@ for i = 1 : length(data_dir)
     AnalyseFolder(data_dir{i}, fps, scale, bodylength);
 end
 
+
 function AnalyseFolder(data_dir, fps, scale, bodylength)
     pos_bs = strfind(data_dir,'Results');
     sub_dir = data_dir(pos_bs(end)+length('Results/Tracking/'):length(data_dir));
@@ -2219,4 +2208,85 @@ switch choice
         delete(hObject);
     case 'Cancel'
         return;
+end
+
+
+% --- Executes on button press in Foreground.
+function Foreground_Callback(hObject, eventdata, handles)
+% hObject    handle to Foreground (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+hMainGui = getappdata(0, 'hMainGui');
+data_dir = getappdata(hMainGui, 'data_dir');
+
+set(handles.Text_Display, 'String', 'Starting foreground extraction.');
+pause(1);
+handles.axes1 = gcf;
+
+pos_bs = strfind(data_dir,'Data');
+sub_dir = data_dir(pos_bs(end)+length('Data'):length(data_dir));
+data_dir = ['./Data' sub_dir '/'];
+output_dir = ['./Results/SegmentedImages' sub_dir '/'];
+if(~exist(output_dir))
+    mkdir(output_dir);
+end
+
+img_list = load_img_list(data_dir);
+
+I = imread([data_dir img_list(1).name]);
+if(~exist([data_dir 'Background/Background.png']) || handles.OverrideBackground.Value==1)
+    [~,~,ref_img,~] = video2background(data_dir, sub_dir);
+    if(~exist([data_dir 'Background']))
+        mkdir([data_dir 'Background'])
+    end
+    imwrite(uint8(ref_img),[data_dir 'Background/Background.png'], 'png');
+else
+    ref_img = imread([data_dir 'Background/Background.png']);
+end
+
+imshow(uint8(ref_img));
+set(handles.Text_Display, 'String', 'This is the background averaged over the dataset.');
+pause(2);
+
+if(length(handles.ChooseDisplay.String)<2)
+    handles.ChooseDisplay.String{2} = 'ROI';
+end
+
+handles.ChooseDisplay.Value = 2;
+
+foreground_thres = handles.ForegroundSlider.Value;
+
+set(handles.Text_Display, 'String', 'Extracting the region of interest.');
+for i = 1 : length(img_list)
+    I = imread([data_dir img_list(i).name]);
+    I = double(I);
+
+    roi_img = (max(ref_img - I(:,:,1),0) ./ ref_img) > foreground_thres;
+    roi_img = bwareaopen(roi_img, 200);
+    
+    handles.GoToDropdown.Value = i;
+    img_output = repmat(I/255,[1 1 3]);
+    img_output(:,:,3) = img_output(:,:,3) + roi_img;
+    imshow(img_output);
+    pause(0.01);
+    imwrite(roi_img,[output_dir 'roi_' num2str(i) '.png'],'png');
+end
+
+
+% --- Executes on button press in ViewBackground.
+function ViewBackground_Callback(hObject, eventdata, handles)
+% hObject    handle to ViewBackground (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+hMainGui = getappdata(0, 'hMainGui');
+data_dir = getappdata(hMainGui, 'data_dir');
+pos_bs = strfind(data_dir,'Data');
+sub_dir = data_dir(pos_bs(end)+length('Data'):length(data_dir));
+data_dir = ['./Data' sub_dir '/'];
+if (~exist([data_dir 'Background/Background.png']))
+    set(handles.Text_Display, 'String', 'No valid Background/Background.png found.');
+else
+    ref_img = imread([data_dir 'Background/Background.png']);
+    imshow(ref_img)
+    set(handles.Text_Display, 'String', 'Loaded Background/Background.png as background');
 end

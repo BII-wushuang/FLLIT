@@ -5,10 +5,12 @@ function  [pos_img,neg_img_body,neg_img_bkg] = leg_segment(I,ref_img,sil_thres)
 
 %ref_img is the background
 if(nargin < 3)
-    sil_thres = 0.2;
+    sil_thres = 0.1;
 end
 
 I = double(I);
+
+sil_thres = 0.05;
 
 fly_silhouette = max(ref_img - I,0) ./ ref_img > sil_thres;
 %background segmentation, if the intensity ratio is greater than sil_thres,

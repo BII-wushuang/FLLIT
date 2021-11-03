@@ -1,4 +1,8 @@
-function [thres, mean_I,std_I,ref_img,mask_imgs_fly] = video2background(data_dir, sub_dir) 
+function [mean_I,std_I,ref_img,mask_imgs_fly] = video2background(data_dir, sub_dir, thres) 
+
+if(nargin < 3)
+    thres = 0.1;
+end
 
 dir_result = './Results/Classifiers';
 pos_bs = strfind(sub_dir, '/');
@@ -53,8 +57,6 @@ end
 mask_imgs_fly = zeros(size(mean_I));
 bkg_imgs = zeros(size(mean_I));
 
-thres = 0.1;
-
 sample_ratio = 25;
 
 for i_img = 1 : floor(length(img_list) / sample_ratio)
@@ -68,3 +70,4 @@ for i_img = 1 : floor(length(img_list) / sample_ratio)
 end
 
 ref_img = bkg_imgs ./ mask_imgs_fly;
+ref_img = imcrop(ref_img,[21 21 size(I,2)-41 size(I,1)-41]);

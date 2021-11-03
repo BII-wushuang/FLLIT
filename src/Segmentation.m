@@ -1,9 +1,10 @@
 %Classifier for leg segmentation
-function Segmentation (data_dir,score_thres,load_wl)
+function Segmentation (data_dir,score_thres,foreground_thres,load_wl)
 %% locate the image folders and the output folders
 if (nargin < 1)
     load_wl = 1;
     score_thres = 0.65;
+    foreground_thres = 0.1;
     data_dir = uigetdir('./Data');
     addpath(genpath('./KernelBoost-v0.1/'));
 end
@@ -21,6 +22,43 @@ if(~exist(output_dir))
     mkdir(output_dir);
 end
 
+img_list = load_img_list(data_dir);
+I = imread([data_dir img_list(1).name]);
+
+%% Call the background 
+if(~exist([data_dir 'Background/Background.png']))
+    [~,~,ref_img,~] = video2background(data_dir, sub_dir);
+    if(~exist([data_dir 'Background']))
+        mkdir([data_dir 'Background'])
+    end
+    imwrite(uint8(ref_img),[data_dir 'Background/Background.png'], 'png');
+else
+    ref_img = imread([data_dir 'Background/Background.png']);
+end
+
+imshow(uint8(ref_img));
+pause(2);
+
+for i = 1 : length(img_list)
+    I = imread([data_dir img_list(i).name]);
+    I = double(I);
+
+    roi_img = (max(ref_img - I(:,:,1),0) ./ ref_img) > foreground_thres;
+    roi_img = bwareaopen(roi_img, 200);
+    
+    img_output = repmat(I/255,[1 1 3]);
+    img_output(:,:,3) = img_output(:,:,3) + roi_img;
+    imshow(img_output);
+    pause(0.01);
+    imwrite(roi_img,[output_dir 'roi_' num2str(i) '.png'],'png');
+end
+
+%% Another section
+
+ref_img = imread([data_dir 'Background/Background.png']);
+ref_img = double(ref_img);
+ref_img = padarray(ref_img,[20 20],'replicate');
+
 params = setup_config_L('Drive');
 %params = setup_lists(params);
 %params = setup_directories_L(params);
@@ -29,52 +67,6 @@ params.pos_samples_no = 30000;
 params.neg_samples_no = 30000;
 params.sample_size = [41 41]';
 
-img_list = load_img_list(data_dir);
-
-I = imread([data_dir img_list(1).name]);
-
-%% Call the background 
-if(~isempty(dir([data_dir 'Background/']))) %check if Background is empty
-    if (exist([data_dir 'Background/Background.png'])) %if not, check if background.png is there
-        ref_img = imread([data_dir 'Background/Background.png']); %read background
-        ref_img = double(ref_img); 
-        ref_img = padarray(ref_img,[20 20],'replicate'); %
-        thres = 0.1;
-        imshow(imcrop(ref_img,[21 21 size(I,2)-1 size(I,1)-1]),[]);
-    else
-        try
-            background = dir([data_dir 'Background/']);
-            ref_img = imread([data_dir 'Background/' background(3).name]);
-            ref_img = double(ref_img);
-            ref_img = padarray(ref_img,[20 20],'replicate');
-            thres = 0.1;
-            imshow(imcrop(ref_img,[21 21 size(I,2)-1 size(I,1)-1]),[]);
-            %same as the previous section
-        catch
-            [thres,~,~,ref_img,~] = video2background(data_dir, sub_dir);
-            %take the thres and ref_img from video2background function
-            %
-            %
-            %%%
-            imshow(imcrop(ref_img,[21 21 size(I,2)-1 size(I,1)-1]),[]);
-            if(~exist([data_dir 'Background']))
-                mkdir([data_dir 'Background'])
-            end
-            imwrite(uint8(imcrop(ref_img,[21 21 size(I,2)-1 size(I,1)-1])),[data_dir 'Background/Background.png'], 'png');
-        end
-    end
-else
-    %case 2 if Background folder is empty
-    [thres,~,~,ref_img,~] = video2background(data_dir, sub_dir);
-    imshow(imcrop(ref_img,[21 21 size(I,2)-1 size(I,1)-1]),[]);
-    if(~exist([data_dir 'Background']))
-        mkdir([data_dir 'Background'])
-    end
-    imwrite(uint8(imcrop(ref_img,[21 21 size(I,2)-1 size(I,1)-1])),[data_dir 'Background/Background.png'], 'png');
-end
-pause(2);
-
-%% Another section
 if (load_wl)
     fprintf('Please select the trained classifier to be used.\n');
     [wl_file, wl_dir] = uigetfile([pwd '/Results/Classifiers/','*.mat']);
@@ -93,7 +85,7 @@ else
             I = double(I);
             I = padarray(I,[20 20],'replicate');
 
-            [pos_img,neg_img_body,neg_img_bkg] = leg_segment(I,ref_img,thres);
+            [pos_img,neg_img_body,neg_img_bkg] = leg_segment(I,ref_img,foreground_thres);
             show_img_output = repmat(I/255,[1 1 3]);
             show_img_output(:,:,1) = show_img_output(:,:,1) + pos_img;
             show_img_output(:,:,3) = show_img_output(:,:,3) + neg_img_body;
@@ -212,22 +204,18 @@ for i_sec = 1 : ceil(length(img_list) / sample_ratio / sec_no)
         I = double(I);
         I = padarray(I,[20 20],'replicate');
         
-        roi_img = (max(ref_img - I(:,:,1),0) ./ ref_img) > thres;
-        roi_img = bwareaopen(roi_img, 200);
-        
         %neg_img{i_img} = leg_segment_clean(I,roi_img);
         
         bkg_sub = (ref_img - I);        
         I(:,:,2) = bkg_sub;
         
-        I = I / 255;    
-        
-        roi_images{i_img} = roi_img;
+        I = I / 255;
         
         X{i_img,1} = I(:,:,1);
         X{i_img,2} = I(:,:,2);
         
-        imwrite(imcrop(roi_images{i_img},[21 21 size(I,2)-41 size(I,1)-41]),[output_dir 'roi_' num2str(imgs_sec(i_img)) '.png'],'png');
+        roi_img = imread([output_dir 'roi_' num2str(imgs_sec(i_img)) '.png']);
+        roi_images{i_img} = padarray(roi_img,[20 20],'replicate'); 
     end
     
     score_images = batch_evaluate_boost_images(X,params,weak_learners,roi_images);
