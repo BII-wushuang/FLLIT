@@ -33,7 +33,7 @@ if(~exist([data_dir 'Background/Background.png']))
     end
     imwrite(uint8(ref_img),[data_dir 'Background/Background.png'], 'png');
 else
-    ref_img = imread([data_dir 'Background/Background.png']);
+    ref_img = double(imread([data_dir 'Background/Background.png']));
 end
 
 imshow(uint8(ref_img));

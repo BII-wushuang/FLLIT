@@ -10,8 +10,6 @@ end
 
 I = double(I);
 
-sil_thres = 0.05;
-
 fly_silhouette = max(ref_img - I,0) ./ ref_img > sil_thres;
 %background segmentation, if the intensity ratio is greater than sil_thres,
 %then keep it
