@@ -2,8 +2,8 @@
 function DataProcessing_New(fps,data_dir,scale, bodylength)
 
 if (nargin < 1)
-    fps = 1000;
-    scale=11;
+    fps = 2000;
+    scale=11; % dimension of arena is 11mm
     data_dir = uigetdir('./Results/Tracking/');
     bodylength = 2.88;
 end
@@ -15,7 +15,8 @@ try
 catch
 end
 
-fps_factor = floor(1000/fps);
+pixel_mm = 11/512; % 1 pixel corresponds to how many mm
+frame_ms = 1000/fps; % 1 frame corresponds to how many ms
 
 pos_bs = strfind(data_dir,'Results');
 sub_dir = data_dir(pos_bs(end)+length('Results/Tracking/'):length(data_dir));
@@ -154,12 +155,12 @@ export_fig([output_dir 'BodyTrajectory.pdf'], '-pdf','-transparent');
 %% Obtaining the CoM speed
 i = startframe : endframe;
 Distance = dist(startframe : endframe);
-skip = min(nframes/2,floor(50/fps_factor));
+skip = min(nframes/2,floor(50/frame_ms));
 B(1) = 0;
 B(startframe+1:endframe) = diff(dist(startframe:endframe));
 f = fit((startframe + skip / 2: skip: endframe - skip/2)', B(startframe + skip / 2: skip: endframe - skip/2)', 'smoothingspline', 'SmoothingParam', 0.8);
 %Speedhist = hist(11000/512*f(i),(-20:0.5:50));
-Speed = [[1:nframes]'*fps_factor, f(i)/fps_factor*scale*1000/512];
+Speed = [[1:nframes]'*frame_ms, f(i)*pixel_mm*1000/frame_ms];
 
 fileID = fopen([output_dir 'BodyVelocity.xlsx'],'w');
 fprintf(fileID,'%s \t %s', 'Time(ms)', 'Velocity (mm/s)');
@@ -171,10 +172,10 @@ clf(1);
 figure(1);
 hold on
 Speedplot = plot(Speed(:,1),Speed(:,2));
-plot(zeros(nframes*fps_factor,1),'--','color',[0 0 0]);
+plot(zeros(nframes,1),'--','color',[0 0 0]);
 hold off
 title('Body Velocity');
-axis([1 nframes*fps_factor -30 60]);
+axis([1 nframes*frame_ms -30 60]);
 Speedplot.Parent.XLabel.String = 'Time(ms)';
 Speedplot.Parent.YLabel.String = 'Velocity (mm/s)';
 export_fig([output_dir 'BodyVelocity.pdf'], '-pdf','-transparent');
@@ -207,7 +208,7 @@ for j = 1:nlegs
         end
     end
     f = fit((startframe: 10: endframe)', spd(startframe: 10: endframe,j), 'smoothingspline', 'SmoothingParam', 1);
-    legspd(:, j) = abs(f(i))/fps_factor*scale*1000/512;
+    legspd(:, j) = abs(f(i))*pixel_mm*1000/frame_ms;
     
     % Vertical leg trajectories in body-centred frame of reference
     f = fit((startframe: 10: endframe)', ny(startframe: 10: endframe,j), 'smoothingspline', 'SmoothingParam', 0.95);
@@ -221,19 +222,19 @@ for j = 1:nlegs
     hold off
     
     % Gait coordination
-    skip = floor(10 / fps_factor);
+    skip = floor(10 / frame_ms);
     g = fit((startframe: skip: endframe)', x(startframe: skip: endframe,j), 'smoothingspline', 'SmoothingParam', 1);
     h = fit((startframe: skip: endframe)', y(startframe: skip: endframe,j), 'smoothingspline', 'SmoothingParam', 1);
-    gait_idx = find(abs(gradient(g(i)))>0.3*fps_factor | abs(gradient(h(i)))>0.3*fps_factor);
+    gait_idx = find(abs(gradient(g(i)))>0.3*frame_ms | abs(gradient(h(i)))>0.3*frame_ms);
     % gait_idx = find(legspd(:,j)>mean(legspd(:,j))/3);
     gait(gait_idx,j) = 1;
     
     ng = fit((startframe: skip: endframe)', nx(startframe: skip: endframe,j), 'smoothingspline', 'SmoothingParam', 1);
     nh = fit((startframe: skip: endframe)', ny(startframe: skip: endframe,j), 'smoothingspline', 'SmoothingParam', 1);
-    ngait_idx = find(abs(gradient(ng(i)))>0.2*fps_factor | abs(gradient(nh(i)))>0.2*fps_factor);
+    ngait_idx = find(abs(gradient(ng(i)))>0.2*frame_ms | abs(gradient(nh(i)))>0.2*frame_ms);
     ngait(ngait_idx,j) = 1;
     
-    thres = 15/fps_factor;
+    thres = 15/frame_ms;
     cc = bwconncomp(gait(:,j));
     for k = 1 : cc.NumObjects
         if cellfun(@length,cc.PixelIdxList(k))<thres
@@ -268,7 +269,7 @@ for j = 1:nlegs
     foot_dragging(:,j) = ~ngait(:,j).*gait(:,j);
     cc = bwconncomp(foot_dragging(:,j));
     for k = 1 : cc.NumObjects
-        if cellfun(@length,cc.PixelIdxList(k))<20/fps_factor
+        if cellfun(@length,cc.PixelIdxList(k))<20/frame_ms
             foot_dragging(cc.PixelIdxList{k},j) = 0;
         end
     end
@@ -284,7 +285,7 @@ fileID = fopen([output_dir 'LegSpeed.xlsx'],'w');
 fprintf(fileID,'%s \t %s \t', 'Time(ms)', legs_id{:});
 fprintf(fileID,'\n');
 fclose(fileID);
-dlmwrite([output_dir 'LegSpeed.xlsx'],[[1:nframes]'*fps_factor, legspd],'delimiter','\t','-append');
+dlmwrite([output_dir 'LegSpeed.xlsx'],[[1:nframes]'*frame_ms, legspd],'delimiter','\t','-append');
 
 % fileID = fopen([output_dir 'FootDragging.xlsx'],'w');
 % fprintf(fileID,'%s \t %s \t %s \n', 'Leg', 'StartFrame', 'EndFrame');
@@ -303,7 +304,7 @@ clf(1);
 figure(1);
 colormap('jet');
 clims = [0 200];
-Gaitplot = imagesc([1 nframes*fps_factor], [1 nlegs], abs(legspd)', clims);
+Gaitplot = imagesc([1 nframes*frame_ms], [1 nlegs], abs(legspd)', clims);
 colorbar;
 title('Gait and Speed');
 Gaitplot.Parent.YTickLabel = legs_id;
@@ -322,19 +323,19 @@ for i = 1:nframes
     end
 end
 % Gait index averaged over a moving window of 80ms
-gaitindex = movmean(gaitindex,80/fps_factor);
+gaitindex = movmean(gaitindex,80/frame_ms);
 
 fileID = fopen([output_dir 'GaitIndex.xlsx'],'w');
 fprintf(fileID,'%s \t %s', 'Time(ms)', 'Gait Index');
 fprintf(fileID,'\n');
 fclose(fileID);
-dlmwrite([output_dir 'GaitIndex.xlsx'],[[1:nframes]'*fps_factor, gaitindex],'delimiter','\t','-append');
+dlmwrite([output_dir 'GaitIndex.xlsx'],[[1:nframes]'*frame_ms, gaitindex],'delimiter','\t','-append');
 
 clf(1);
 figure(1);
-GaitIndexplot = plot([1:nframes]'*fps_factor, gaitindex);
+GaitIndexplot = plot([1:nframes]'*frame_ms, gaitindex);
 title('Gait Index');
-axis([0 nframes*fps_factor -1 1]);
+axis([0 nframes*frame_ms -1 1]);
 GaitIndexplot.Parent.YLabel.String = 'Gait Index';
 GaitIndexplot.Parent.XLabel.String = 'Time(ms)';
 export_fig([output_dir 'GaitIndex.pdf'], '-pdf','-transparent');
@@ -412,7 +413,7 @@ for j = 1:nlegs
     fprintf(fileID,'%s \t', 'Stride #', 'Duration (ms)', 'Period (ms)', 'Displacement (mm)', 'Path Covered (mm)', 'Take-off time (ms)', 'Landing time (ms)', 'AEP x (mm)', 'AEP y (mm)', 'PEP x (mm)', 'PEP y (mm)', 'Amplitude (mm)', 'Stance linearity (mm)', 'Stretch (mm)');
     fprintf(fileID,'\n');
     fclose(fileID);
-    dlmwrite([output_dir 'StrideParameters.xlsx'], [[1:nstrides(j)]' stride_duration(j,1:nstrides(j))'*fps_factor stride_period(j,1:nstrides(j))'*fps_factor stride_dist(j,1:nstrides(j))'*scale/512 path_length(j,1:nstrides(j))'*scale/512 stride_start(j,1:nstrides(j))'*fps_factor stride_end(j,1:nstrides(j))'*fps_factor landing(j,1:nstrides(j),1)'*scale/512 landing(j,1:nstrides(j),2)'*scale/512 takeoff(j,1:nstrides(j),1)'*scale/512 takeoff(j,1:nstrides(j),2)'*scale/512 stride_amplitude(j,1:nstrides(j))'*scale/512 stride_regularity(j,1:nstrides(j))'*scale/512 stretch(j,1:nstrides(j))'*scale/512],'delimiter','\t','-append');
+    dlmwrite([output_dir 'StrideParameters.xlsx'], [[1:nstrides(j)]' stride_duration(j,1:nstrides(j))'*frame_ms stride_period(j,1:nstrides(j))'*frame_ms stride_dist(j,1:nstrides(j))'*scale/512 path_length(j,1:nstrides(j))'*scale/512 stride_start(j,1:nstrides(j))'*frame_ms stride_end(j,1:nstrides(j))'*frame_ms landing(j,1:nstrides(j),1)'*scale/512 landing(j,1:nstrides(j),2)'*scale/512 takeoff(j,1:nstrides(j),1)'*scale/512 takeoff(j,1:nstrides(j),2)'*scale/512 stride_amplitude(j,1:nstrides(j))'*scale/512 stride_regularity(j,1:nstrides(j))'*scale/512 stretch(j,1:nstrides(j))'*scale/512],'delimiter','\t','-append');
     fileID = fopen([output_dir 'StrideParameters.xlsx'],'a');
     fprintf(fileID,'\n');
     fclose(fileID);
@@ -458,8 +459,8 @@ for j = 1:nlegs
     footprint_dev(j) = acos(stride_vec(1)*pathpca(j,1,1) + stride_vec(2)*pathpca(j,1,2))*180/pi;
     hold off
     fprintf(fileID,'%s',legs_id{j});
-    fprintf(fileID,'\t %0.2f', [100*mov_percentage(j) mean_stride_period(j)*fps_factor total_path_length(j)*scale/512 landing_mean(j,1)*scale/512 landing_mean(j,2)*scale/512 takeoff_mean(j,1)*scale/512 takeoff_mean(j,2)*scale/512 landing_std(j,1)*scale/512 landing_std(j,2)*scale/512 takeoff_std(j,1)*scale/512 takeoff_std(j,2)*scale/512 area(j)*scale/512*scale/512 area_over_path(j)*scale/512 domain_length(j)*scale/512 domain_width(j)*scale/512 footprint_dev(j)]);
-    % fprintf(fileID,'\t %0.3f', [100*mov_percentage(j) mean_stride_period(j)*fps_factor total_path_length(j)*scale/512 landing_mean(j,1)*scale/512 landing_mean(j,2)*scale/512 takeoff_mean(j,1)*scale/512 takeoff_mean(j,2)*scale/512 l_std(j)*scale/512 t_std(j)*scale/512 area(j)*scale/512*scale/512 area_over_path(j)*scale/512 domain_length(j)*scale/512 domain_width(j)*scale/512 footprint_dev(j)]);
+    fprintf(fileID,'\t %0.2f', [100*mov_percentage(j) mean_stride_period(j)*frame_ms total_path_length(j)*scale/512 landing_mean(j,1)*scale/512 landing_mean(j,2)*scale/512 takeoff_mean(j,1)*scale/512 takeoff_mean(j,2)*scale/512 landing_std(j,1)*scale/512 landing_std(j,2)*scale/512 takeoff_std(j,1)*scale/512 takeoff_std(j,2)*scale/512 area(j)*scale/512*scale/512 area_over_path(j)*scale/512 domain_length(j)*scale/512 domain_width(j)*scale/512 footprint_dev(j)]);
+    % fprintf(fileID,'\t %0.3f', [100*mov_percentage(j) mean_stride_period(j)*frame_ms total_path_length(j)*scale/512 landing_mean(j,1)*scale/512 landing_mean(j,2)*scale/512 takeoff_mean(j,1)*scale/512 takeoff_mean(j,2)*scale/512 l_std(j)*scale/512 t_std(j)*scale/512 area(j)*scale/512*scale/512 area_over_path(j)*scale/512 domain_length(j)*scale/512 domain_width(j)*scale/512 footprint_dev(j)]);
     fprintf(fileID,'\n');
 end
 fclose(fileID);
@@ -627,7 +628,7 @@ fclose(fileID);
 % fprintf(fileID,'%s \t %s \t', 'Time(ms)', legs_id{:});
 % fprintf(fileID,'\n');
 % fclose(fileID);
-% dlmwrite([output_dir 'LegAngles/LegAngles.xlsx'],[[1:nframes]'*fps_factor, legangles],'delimiter','\t','-append', 'precision','%.1f');
+% dlmwrite([output_dir 'LegAngles/LegAngles.xlsx'],[[1:nframes]'*frame_ms, legangles],'delimiter','\t','-append', 'precision','%.1f');
 % 
 % PEP_angles = cell(6,1);
 % AEP_angles = cell(6,1);
