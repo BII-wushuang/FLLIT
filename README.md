@@ -78,5 +78,5 @@ Further details about **FLLIT** can be found in the [readme](./Compiled/Readme.p
 
 A video walkthrough of **FLLIT** is covered in the following link.
 
-[![FLLIT](https://img.youtube.com/vi/g31la3oUNYk/0.jpg)](https://www.youtube.com/watch?v=g31la3oUNYk)
+[![FLLIT](https://img.youtube.com/vi/9846ZswUURc/0.jpg)](https://www.youtube.com/watch?v=9846ZswUURc)
 
